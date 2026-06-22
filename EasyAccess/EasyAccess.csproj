@@ -10,6 +10,9 @@
     <UseWinUI>true</UseWinUI>
     <WinUISDKReferences>false</WinUISDKReferences>
     <Nullable>enable</Nullable>
+    <WindowsPackageType>None</WindowsPackageType>
+    <SelfContained Condition="'$(Configuration)' == 'Release'">true</SelfContained>
+    <WindowsAppSDKSelfContained Condition="'$(Configuration)' == 'Release'">true</WindowsAppSDKSelfContained>
   </PropertyGroup>
 
   <ItemGroup>
