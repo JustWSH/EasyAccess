@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EasyAccess — 开发指导文档</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --text-secondary: #555;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e0e0e0;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --blue-light: #eff6ff;
+    --blue: #2563eb;
+    --blue-border: #93c5fd;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 15px;
+  }
+  .container { max-width: 860px; margin: 0 auto; padding: 60px 24px; }
+  header { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+  header .subtitle { color: var(--text-secondary); font-size: 14px; }
+  .summary { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 40px; }
+  .summary p { font-size: 15px; color: var(--text-secondary); }
+  .summary strong { color: var(--text); }
+  section { margin-bottom: 40px; }
+  section h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  section h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+  section h4 { font-size: 14px; font-weight: 600; margin: 14px 0 6px; color: var(--text-secondary); }
+  .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .comparison .col { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; }
+  .comparison .col h4 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .comparison .col p, .comparison .col ul { font-size: 14px; color: var(--text-secondary); }
+  .comparison .col ul { padding-left: 16px; }
+  .comparison .col li { margin-bottom: 4px; }
+  pre.code-block {
+    background: #f5f5f5; border: 1px solid var(--border); border-radius: 6px;
+    padding: 16px; font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 13px; line-height: 1.6; overflow-x: auto; margin: 12px 0;
+  }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 12px 0; border: 1px solid var(--gray-200); border-radius: 6px; position: relative; }
+  .table-wrap table { margin: 0; border: none; }
+  .table-wrap table th, .table-wrap table td { white-space: nowrap; }
+  .table-wrap table th:first-child, .table-wrap table td:first-child { white-space: normal; min-width: 100px; }
+  .table-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 28px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.95)); pointer-events: none; opacity: 0; }
+  @media (max-width: 600px) { .table-wrap::after { opacity: 1; } }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  th { font-weight: 600; background: #f8f8f8; font-size: 13px; }
+  td:first-child { font-weight: 500; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .tag-a { background: var(--accent-light); color: var(--accent); }
+  .tag-b { background: #fff7ed; color: #ea580c; }
+  .tag-c { background: var(--green-light); color: var(--green); }
+  .insight { background: #fffbeb; border-left: 3px solid #f59e0b; padding: 14px 16px; margin: 16px 0; border-radius: 0 6px 6px 0; font-size: 14px; color: #92400e; }
+  .insight strong { color: #78350f; }
+  .info-box { padding: 16px 20px; border-radius: 6px; margin: 16px 0; font-size: 14px; }
+  .info-box.blue { background: var(--blue-light); border-left: 3px solid var(--blue); }
+  .info-box.red { background: var(--red-light); border-left: 3px solid var(--red); }
+  .info-box.green { background: var(--green-light); border-left: 3px solid var(--green); }
+  .info-box.amber { background: var(--amber-light); border-left: 3px solid var(--amber); }
+  .info-box p { margin-bottom: 8px; }
+  .info-box p:last-child { margin-bottom: 0; }
+  .key-point { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 16px; margin: 16px 0; }
+  .key-point h4 { color: #0369a1; margin-bottom: 8px; }
+  .toc { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 40px; }
+  .toc h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { font-size: 14px; margin-bottom: 4px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr; } }
+  .summary-card { background: white; border: 1px solid var(--gray-200); border-radius: 8px; padding: 20px; }
+  .summary-card .label { font-size: 12px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; }
+  .summary-card .value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+  .summary-card .desc { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+  .section-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 24px; overflow: hidden; }
+  .section-card .section-header { background: var(--gray-100); padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .section-card .section-header .num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: white; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .section-card .section-header h3 { margin: 0; font-size: 15px; }
+  .section-card .section-body { padding: 20px; }
+  .section-card .section-body p { margin-bottom: 12px; }
+  .section-card .section-body p:last-child { margin-bottom: 0; }
+  .timeline { position: relative; padding-left: 28px; margin: 16px 0; }
+  .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--gray-200); }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-item::before { content: ''; position: absolute; left: -24px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--blue); border: 2px solid white; box-shadow: 0 0 0 2px var(--blue-border); }
+  .timeline-item .phase { font-weight: 700; color: var(--blue); font-size: 14px; }
+  .timeline-item .desc { font-size: 14px; color: var(--gray-600); margin-top: 2px; }
+  pre.dir-tree {
+    background: #f5f5f5; border: 1px solid var(--border); border-radius: 6px;
+    padding: 16px 20px; font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 13px; line-height: 1.8; overflow-x: auto; margin: 12px 0;
+  }
+  pre.dir-tree .dir { color: var(--accent); font-weight: 600; }
+  pre.dir-tree .file { color: var(--text-secondary); }
+  pre.dir-tree .comment { color: #9ca3af; font-style: italic; }
+  p { margin-bottom: 12px; }
+  p:last-child { margin-bottom: 0; }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; }
+  footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 13px; color: #999; }
+  @media (max-width: 600px) {
+    .container { padding: 16px 8px; }
+    header h1 { font-size: 22px; }
+    section h2 { font-size: 16px; }
+    .comparison { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    pre.dir-tree { font-size: 12px; padding: 12px; }
+    pre.code-block { font-size: 12px; padding: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>EasyAccess — 开发指导文档</h1>
+  <div class="subtitle">"Already open. One click away." / "已打开的文件夹，一键即达。" · v1.0 Draft · 2026-06-17</div>
+</header>
+
+<div class="summary">
+  <p><strong>EasyAccess</strong> 是一款 Windows 常驻后台工具，在检测到文件打开/保存对话框时，在对话框底部自动显示后台已打开的资源管理器文件夹列表，用户一键即可导航到目标文件夹，消除反复手动浏览目录的重复操作。面向所有 Windows 用户，兼容 Win10 1903+ 和 Win11。</p>
+</div>
+
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="label">技术栈</div>
+    <div class="value">C++/WinRT</div>
+    <div class="desc">Win32 宿主窗口 + WinUI 3 XAML 渲染</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">目标平台</div>
+    <div class="value">Win10 / Win11</div>
+    <div class="desc">最低 Win10 1903 (build 18362)</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">目标内存</div>
+    <div class="value">&lt; 20MB</div>
+    <div class="desc">idle 状态进程内存占用</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">分发方式</div>
+    <div class="value">Portable</div>
+    <div class="desc">解压即用，免安装</div>
+  </div>
+</div>
+
+<div class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#arch">整体架构设计</a></li>
+    <li><a href="#techstack">技术栈选型</a></li>
+    <li><a href="#dialog-detect">核心模块：文件对话框检测</a></li>
+    <li><a href="#folder-collect">核心模块：文件夹列表收集</a></li>
+    <li><a href="#overlay">核心模块：UI 覆盖层</a></li>
+    <li><a href="#navigate">核心模块：导航注入</a></li>
+    <li><a href="#infra">基础设施层</a></li>
+    <li><a href="#compat">兼容性与安全</a></li>
+    <li><a href="#whitelist-schema">白名单 JSON Schema</a></li>
+    <li><a href="#roadmap">开发路线图</a></li>
+    <li><a href="#dir-structure">项目目录结构</a></li>
+  </ol>
+</div>
+
+<!-- ==================== 1. 整体架构 ==================== -->
+<section id="arch">
+  <h2>1. 整体架构设计</h2>
+
+  <h3>1.1 架构分层</h3>
+  <p>EasyAccess 采用四层架构，单进程运行，职责清晰分离：</p>
+
+  <pre class="dir-tree">
+┌──────────────────────────────────────────────────────┐
+│                    UI Layer                           │
+│  OverlayWindow (Win32 宿主 + XAML Islands/WinUI 3)   │
+│  TrayIcon (Shell_NotifyIcon)                          │
+├──────────────────────────────────────────────────────┤
+│                Core Logic Layer                       │
+│  DialogDetector  ·  FolderCollector  ·  Navigator     │
+│  WhitelistEngine                                      │
+├──────────────────────────────────────────────────────┤
+│                System Layer                           │
+│  WinEventHook · UIAutomation · COM Shell · SendInput  │
+├──────────────────────────────────────────────────────┤
+│              Infrastructure Layer                     │
+│  SingleInstance · AutoStart · ConfigManager · Logger  │
+└──────────────────────────────────────────────────────┘
+  </pre>
+
+  <h3>1.2 线程模型</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>线程</th><th>职责</th><th>消息循环</th></tr></thead>
+    <tbody>
+      <tr><td>Main Thread</td><td>Win32 消息泵、SetWinEventHook 回调、TrayIcon、窗口位置同步定时器</td><td>GetMessage / DispatchMessage</td></tr>
+      <tr><td>UI Thread</td><td>XAML Islands 渲染、Overlay 窗口绘制</td><td>DispatcherQueue (WinUI 3)</td></tr>
+      <tr><td>Collector Thread</td><td>IShellWindows 遍历、Win11 多标签路径获取</td><td>事件触发，非轮询</td></tr>
+      <tr><td>Input Thread</td><td>SendInput / UI Automation 导航注入操作</td><td>按需创建</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>1.3 数据流</h3>
+  <div class="info-box blue">
+    <p><strong>核心数据流：</strong>Windows Event → DialogDetector 检测 → FolderCollector 收集 → OverlayManager 显示 → Navigator 注入导航</p>
+  </div>
+
+  <pre class="dir-tree">
+<span class="comment">[Windows Event]</span>
+    ↓ SetWinEventHook(EVENT_OBJECT_CREATE / EVENT_SYSTEM_FOREGROUND)
+<span class="dir">DialogDetector.detect(hwnd)</span>
+    ├── 标准对话框: GetClassNameW == "#32770" + 控件特征验证
+    └── 白名单应用: WhitelistEngine → 应用专用检测逻辑
+    ↓ 检测到文件对话框
+<span class="dir">FolderCollector.getOpenFolders()</span>
+    ├── IShellWindows → 遍历资源管理器窗口路径
+    ├── Win11: COM 接口获取多标签路径
+    └── SHChangeNotifyRegister → 增量更新
+    ↓ 文件夹列表就绪
+<span class="dir">OverlayManager.show(hwndDialog, folders)</span>
+    ├── 创建/复用 overlay Win32 宿主窗口
+    ├── SetWindowLongPtrW(GWL_HWNDPARENT, hwndDialog)
+    ├── 计算位置: dialog 底部居中
+    └── WinUI 3 ListView 渲染文件夹列表
+    ↓ 用户点击文件夹
+<span class="dir">Navigator.navigateTo(targetPath)</span>
+    ├── UI Automation: 查找对话框编辑框
+    ├── 设置路径值 (uia_set_value / clipboard_set)
+    └── 确认导航 (Invoke 按钮 / SendInput Enter)
+    ↓ 对话框关闭
+    SetWinEventHook(EVENT_OBJECT_DESTROY) → OverlayManager.hide()
+  </pre>
+</section>
+
+<!-- ==================== 2. 技术栈 ==================== -->
+<section id="techstack">
+  <h2>2. 技术栈选型</h2>
+
+  <div class="section-card">
+    <div class="section-header"><span class="num">2.1</span><h3>语言与编译器</h3></div>
+    <div class="section-body">
+      <p><strong>C++20</strong> + MSVC (Visual Studio 2022)。使用 C++/WinRT 投影访问 Windows Runtime API。</p>
+      <p>选择理由：常驻后台进程，无 GC pause；原生 Win32 API 零开销调用；编译产物体积小。</p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header"><span class="num">2.2</span><h3>UI 渲染：Win32 宿主 + XAML Islands + WinUI 3</h3></div>
+    <div class="section-body">
+      <p>Overlay 窗口采用<strong>混合架构</strong>：</p>
+      <ul>
+        <li><strong>外层</strong>：Win32 窗口（CreateWindowExW，WS_POPUP 样式），完全控制 WndProc、HWND 属性、窗口层级</li>
+        <li><strong>内层</strong>：通过 DesktopWindowXamlSource（XAML Islands）嵌入 WinUI 3 XAML 内容，使用 WinUI 3 原生 ListView + Fluent Design 渲染</li>
+      </ul>
+      <p>这样既拥有 Win32 窗口的完全控制权（设置 GWL_HWNDPARENT、精确定位、消息拦截），又享受 WinUI 3 的原生 Win11 风格渲染（圆角、Acrylic 背景、流畅动画、暗色/亮色主题自动适配）。</p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header"><span class="num">2.3</span><h3>构建系统与依赖管理</h3></div>
+    <div class="section-body">
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>工具</th><th>用途</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>CMake 3.25+</td><td>构建系统</td><td>生成 VS 解决方案</td></tr>
+          <tr><td>vcpkg</td><td>C++ 包管理</td><td>依赖声明式管理，CMake 集成</td></tr>
+          <tr><td>Windows App SDK 1.5+</td><td>WinUI 3 运行时</td><td>提供 WinUI 3 XAML Islands 支持</td></tr>
+          <tr><td>Windows SDK 10.0.22621+</td><td>Win32/COM API</td><td>UI Automation、Shell 接口</td></tr>
+          <tr><td>C++/WinRT (nuget)</td><td>WinRT 投影</td><td>访问 Windows Runtime 类型</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 3. 文件对话框检测 ==================== -->
+<section id="dialog-detect">
+  <h2>3. 核心模块：文件对话框检测</h2>
+
+  <p>这是整个系统最关键、最复杂的模块。采用<strong>两层检测策略</strong>：标准对话框检测 + 白名单应用检测。不在白名单中的非标准对话框不触发，确保零误判。</p>
+
+  <h3>3.1 事件监听</h3>
+  <p>通过 <code>SetWinEventHook</code> 监听两个事件：</p>
+  <ul>
+    <li><strong>EVENT_OBJECT_CREATE</strong> — 新窗口创建时触发，用于第一时间检测新打开的对话框</li>
+    <li><strong>EVENT_SYSTEM_FOREGROUND</strong> — 前台窗口切换时触发，用于检测已存在但刚获得焦点的对话框</li>
+  </ul>
+  <p>Hook 回调必须在 5ms 内返回，避免阻塞系统消息队列。耗时操作（UI Automation 树遍历）post 到工作线程异步执行。</p>
+
+  <h3>3.2 Layer 1：标准对话框检测</h3>
+  <p>约 70% 的应用使用 Windows 标准文件对话框（<code>GetOpenFileName</code> / <code>IFileDialog</code>）。</p>
+  <pre class="dir-tree">
+检测流程:
+  1. GetClassNameW(hwnd) == L"#32770"          <span class="comment">// 标准对话框类名</span>
+  2. 枚举子控件 (EnumChildWindows):
+     - 存在 ComboBoxEx32 (文件类型下拉框)
+     - 存在 Edit (文件名输入框)
+     - 存在 Button 且文本含 "打开|Open|保存|Save|另存"
+  3. 至少命中 2 个特征 → 确认为文件对话框
+  </pre>
+
+  <h3>3.3 Layer 2：白名单应用检测</h3>
+  <p>对于自绘文件对话框的应用（Chrome、Edge、VS Code、Office 等），使用应用专用的检测逻辑。白名单配置为外部 JSON 文件，无需重新编译。</p>
+  <p>每个白名单条目定义：</p>
+  <ul>
+    <li><strong>process_name</strong>：进程名匹配</li>
+    <li><strong>window_class</strong>：窗口类名匹配（可选）</li>
+    <li><strong>detect.uia_conditions</strong>：UI Automation 树中的控件特征组合</li>
+    <li><strong>detect.min_match_count</strong>：最少命中数</li>
+  </ul>
+  <p>检测逻辑：前台窗口进程名 → 匹配白名单条目 → 按该条目的 <code>detect</code> 规则验证 UI Automation 树 → 命中则确认为文件对话框。</p>
+
+  <h3>3.4 提权窗口处理</h3>
+  <div class="info-box red">
+    <p><strong>UAC 安全边界：</strong>以管理员权限运行的应用（如管理员 PowerShell 中的文件对话框），非提权进程无法访问其 UI Automation 树。</p>
+    <p><strong>处理方案：</strong>检测到目标对话框的进程 Token 为管理员权限且 EasyAccess 自身为非提权时，弹出 Toast 通知提示用户以管理员身份重启 EasyAccess。</p>
+  </div>
+</section>
+
+<!-- ==================== 4. 文件夹收集 ==================== -->
+<section id="folder-collect">
+  <h2>4. 核心模块：文件夹列表收集</h2>
+
+  <h3>4.1 设计原则</h3>
+  <ul>
+    <li><strong>事件驱动，按需收集</strong>：对话框检测到时才触发一次 IShellWindows 遍历，不轮询</li>
+    <li><strong>增量更新</strong>：对话框存在期间，通过 SHChangeNotifyRegister 监听文件系统变化做增量更新</li>
+    <li><strong>即时释放</strong>：对话框关闭后立即停止监听，释放资源</li>
+  </ul>
+
+  <h3>4.2 IShellWindows 遍历</h3>
+  <p>通过 COM 接口 <code>IShellWindows</code>（CLSID_ShellWindows）获取所有资源管理器窗口：</p>
+  <pre class="dir-tree">
+CoCreateInstance(CLSID_ShellWindows)
+  → IShellWindows::get_Count()
+  → 遍历每个窗口:
+     → QueryInterface(IWebBrowser2)
+     → get_LocationURL() → URL 解码为本地路径
+     → 验证路径存在且为目录
+     → 收集: { path, displayName, windowTitle }
+  </pre>
+
+  <h3>4.3 Win11 多标签支持</h3>
+  <p>Windows 11 资源管理器支持多标签页。每个标签页可能打开不同的文件夹。</p>
+  <p>获取多标签路径的方法：</p>
+  <ul>
+    <li>通过 <code>IShellBrowser</code> 接口从每个标签页获取当前浏览路径</li>
+    <li>使用 <code>ITabEventHandler</code>（如果可用）监听标签切换事件</li>
+    <li>Fallback：通过 UI Automation 遍历 Tab 控件子项，获取每个标签的路径文本</li>
+  </ul>
+  <p>Win10 不支持原生多标签，跳过此步骤。</p>
+
+  <h3>4.4 增量更新策略</h3>
+  <p>对话框存在期间注册 <code>SHChangeNotifyRegister</code>，监听以下事件：</p>
+  <ul>
+    <li><code>SHCNE_MKDIR</code> — 新文件夹创建</li>
+    <li><code>SHCNE_RENAMEFOLDER</code> — 文件夹重命名</li>
+    <li><code>SHCNE_RMDIR</code> — 文件夹删除</li>
+  </ul>
+  <p>收到事件后更新 FolderCollector 内部缓存，Overlay 通过 DispatcherQueue 同步刷新 UI。</p>
+</section>
+
+<!-- ==================== 5. UI 覆盖层 ==================== -->
+<section id="overlay">
+  <h2>5. 核心模块：UI 覆盖层</h2>
+
+  <h3>5.1 窗口创建与层级控制</h3>
+  <p>Overlay 是一个 <strong>Win32 宿主窗口</strong>，内部通过 XAML Islands 嵌入 WinUI 3 内容：</p>
+  <pre class="dir-tree">
+1. CreateWindowExW(WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
+                   className, L"EasyAccess",
+                   WS_POPUP, ...)
+   <span class="comment">// WS_EX_TOOLWINDOW: 不在任务栏显示</span>
+   <span class="comment">// WS_EX_TOPMOST: 确保在对话框上方</span>
+   <span class="comment">// WS_POPUP: 弹出窗口，无标题栏</span>
+
+2. SetWindowLongPtrW(hwndOverlay, GWL_HWNDPARENT, (LONG_PTR)hwndDialog)
+   <span class="comment">// 设置为对话框的 owned window</span>
+   <span class="comment">// z-order 自动跟随：overlay 始终在 owner 之上</span>
+   <span class="comment">// 对话框关闭时 overlay 自动处理</span>
+
+3. DesktopWindowXamlSource xamlSource;
+   xamlSource.Initialize(hwndOverlay);
+   <span class="comment">// 在 Win32 窗口内初始化 XAML 渲染引擎</span>
+
+4. xamlSource.Content(CreateOverlayContent());
+   <span class="comment">// 设置 WinUI 3 XAML 内容</span>
+  </pre>
+
+  <h3>5.2 定位与跟随</h3>
+  <p>Overlay 定位在对话框底部，宽度与对话框一致（或略窄，两侧各留 16px 边距）。</p>
+  <p>跟随机制：使用 <code>SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE)</code> 监听对话框位置变化，在回调中用 <code>SetWindowPos</code> 同步更新 Overlay 位置。</p>
+  <div class="info-box green">
+    <p><strong>GWL_HWNDPARENT 的优势：</strong>设置了 owned window 关系后，Overlay 的 z-order 自动跟随 owner（对话框）。当对话框被其他窗口遮挡时，Overlay 也一起被遮挡，不会出现显示撕裂。移动对话框时，Windows 会自动移动 owned window，EVENT_OBJECT_LOCATIONCHANGE 回调用于精确定位修正。</p>
+  </div>
+
+  <h3>5.3 WinUI 3 XAML 内容</h3>
+  <p>Overlay 内容使用 WinUI 3 原生控件，确保与 Win11 系统 UI 完全一致：</p>
+  <ul>
+    <li><strong>ListView / ItemsRepeater</strong> — 文件夹列表，支持虚拟化</li>
+    <li><strong>AcrylicBackdrop</strong> — 半透明模糊背景，系统级材质</li>
+    <li><strong>圆角 + 阴影</strong> — WinUI 3 默认 CornerRadius 和 DropShadow</li>
+    <li><strong>主题适配</strong> — 通过 <code>Application.RequestedTheme</code> 跟随系统暗色/亮色</li>
+  </ul>
+
+  <h3>5.4 列表项设计</h3>
+  <ul>
+    <li>每行显示：<strong>文件夹名称</strong>（粗体） + 完整路径（灰色小字，第二行）</li>
+    <li>Hover 高亮：WinUI 3 原生 ListViewItem PointerOver 样式</li>
+    <li>点击反馈：Pressed 样式 + 导航执行</li>
+    <li>显示数量：最多 10 项可见，超出部分滚动</li>
+    <li>高度自适应：&le; 3 个文件夹时自适应内容高度，&gt; 3 个固定最大高度 320px</li>
+    <li>路径过长时中间截断显示：<code>C:\Users\...\Documents</code></li>
+  </ul>
+
+  <h3>5.5 交互行为</h3>
+  <ul>
+    <li>点击 Overlay 外部（对话框内区域）→ Overlay <strong>不消失</strong>，只有对话框关闭才消失</li>
+    <li>Overlay 不抢焦点（WS_EX_NOACTIVATE），不影响对话框内正常操作</li>
+    <li>键盘事件透传到对话框（如直接在对话框中输入文件名）</li>
+  </ul>
+
+  <h3>5.6 DPI 感知</h3>
+  <p>EasyAccess 声明为 <strong>Per-Monitor DPI Aware V2</strong>。Overlay 创建时获取对话框所在显示器的 DPI，按比例缩放尺寸和字体。对话框跨显示器移动时，重新获取 DPI 并调整。</p>
+</section>
+
+<!-- ==================== 6. 导航注入 ==================== -->
+<section id="navigate">
+  <h2>6. 核心模块：导航注入</h2>
+
+  <h3>6.1 基本流程</h3>
+  <p>用户点击 Overlay 中的文件夹后，EasyAccess 需要在目标对话框中"输入"路径并确认导航。</p>
+
+  <h3>6.2 导航策略</h3>
+  <p>每个白名单应用在 JSON 中定义自己的 <code>navigate</code> 策略。主流两种方式：</p>
+
+  <div class="comparison">
+    <div class="col">
+      <h4>策略 A：UI Automation 直接设值</h4>
+      <ul>
+        <li>通过 UI Automation 找到对话框中的文件名 Edit 控件</li>
+        <li><code>ValuePattern.SetValue(targetPath)</code></li>
+        <li>找到"打开/保存"按钮 → <code>InvokePattern.Invoke()</code></li>
+      </ul>
+      <p><strong>适用：</strong>标准对话框、大部分使用 UI Automation 的应用</p>
+      <p><strong>优点：</strong>精准、可靠、无副作用</p>
+    </div>
+    <div class="col">
+      <h4>策略 B：剪贴板 + SendKeys</h4>
+      <ul>
+        <li>保存当前剪贴板内容</li>
+        <li>将目标路径写入剪贴板</li>
+        <li>聚焦 Edit 控件 → <code>Ctrl+V</code> 粘贴</li>
+        <li><code>SendInput</code> 模拟 Enter 键</li>
+        <li>恢复原剪贴板内容</li>
+      </ul>
+      <p><strong>适用：</strong>对 UI Automation 响应不完整的应用</p>
+      <p><strong>优点：</strong>兼容性广</p>
+    </div>
+  </div>
+
+  <h3>6.3 标准对话框的导航</h3>
+  <p>标准对话框（#32770）使用策略 A：</p>
+  <pre class="dir-tree">
+1. FindWindowExW(hwndDialog, NULL, L"Edit", NULL)  <span class="comment">// 文件名编辑框</span>
+2. SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)targetPath)
+3. FindWindowExW(hwndDialog, NULL, L"Button", NULL) <span class="comment">// 遍历找到"打开"按钮</span>
+4. SendMessage(hwndButton, BM_CLICK, 0, 0)
+  </pre>
+
+  <h3>6.4 UIA 导航的可靠性保证</h3>
+  <div class="info-box amber">
+    <p><strong>注意：</strong>不同应用的 UI Automation 实现质量参差不齐。白名单中每个应用的 <code>navigate</code> 策略需要实际测试验证。建议在白名单中增加 <code>verified</code> 字段标记已测试的配置，未验证的配置在 UI 上标注"实验性支持"。</p>
+  </div>
+</section>
+
+<!-- ==================== 7. 基础设施 ==================== -->
+<section id="infra">
+  <h2>7. 基础设施层</h2>
+
+  <h3>7.1 防多开（SingleInstance）</h3>
+  <p>使用 Named Mutex 实现：</p>
+  <pre class="dir-tree">
+HANDLE hMutex = CreateMutexW(NULL, TRUE, L"Global\\EasyAccess_SingleInstance");
+if (GetLastError() == ERROR_ALREADY_EXISTS) {
+    <span class="comment">// 已有实例运行，激活已有窗口或直接退出</span>
+    HWND existing = FindWindowW(L"EasyAccess_Hidden", NULL);
+    if (existing) SendMessage(existing, WM_USER + 1, 0, 0);
+    return 0;
+}
+  </pre>
+
+  <h3>7.2 开机自启（AutoStart）</h3>
+  <p>使用 <strong>HKCU Registry Run Key</strong>，不需要管理员权限：</p>
+  <pre class="dir-tree">
+注册表路径: HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run
+键名: EasyAccess
+键值: "C:\path\to\EasyAccess.exe" --silent
+
+实现:
+  RegOpenKeyExW(HKEY_CURRENT_USER, RunPath, 0, KEY_SET_VALUE, &amp;hKey)
+  RegSetValueExW(hKey, L"EasyAccess", 0, REG_SZ, exePath, ...)
+  <span class="comment">// --silent 参数: 启动时不显示任何 UI，直接进入后台</span>
+  <span class="comment">// 用户通过托盘菜单启用/禁用自启</span>
+  </pre>
+
+  <h3>7.3 配置管理（ConfigManager）</h3>
+  <p>JSON 格式配置文件，存储在 exe 同目录。如果 exe 在只读目录（如 Program Files），退化到 <code>%APPDATA%\EasyAccess\</code>。</p>
+  <pre class="dir-tree">
+config.json:
+{
+  "autostart": true,
+  "show_overlay_on_detect": true,
+  "max_overlay_items": 10,
+  "overlay_position": "bottom",
+  "theme": "system",
+  "log_level": "warn",
+  "whitelist_file": "whitelist.json"
+}
+  </pre>
+
+  <h3>7.4 日志（Logger）</h3>
+  <p>轻量文件日志，支持级别控制：</p>
+  <ul>
+    <li><strong>error</strong>：致命错误、COM 初始化失败</li>
+    <li><strong>warn</strong>：检测到对话框但白名单匹配失败、UAC 权限不足</li>
+    <li><strong>info</strong>：对话框检测/关闭、文件夹列表更新</li>
+    <li><strong>debug</strong>：每个窗口事件、UI Automation 树遍历结果、导航注入步骤</li>
+  </ul>
+  <p>日志文件：<code>logs/EasyAccess_YYYYMMDD.log</code>，单文件最大 5MB，自动轮转保留最近 7 天。</p>
+</section>
+
+<!-- ==================== 8. 兼容性与安全 ==================== -->
+<section id="compat">
+  <h2>8. 兼容性与安全</h2>
+
+  <h3>8.1 系统兼容性</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>特性</th><th>Win10 1903+</th><th>Win11</th></tr></thead>
+    <tbody>
+      <tr><td>标准对话框检测</td><td><span class="tag tag-c">支持</span></td><td><span class="tag tag-c">支持</span></td></tr>
+      <tr><td>白名单应用检测</td><td><span class="tag tag-c">支持</span></td><td><span class="tag tag-c">支持</span></td></tr>
+      <tr><td>IShellWindows 路径获取</td><td><span class="tag tag-c">支持</span></td><td><span class="tag tag-c">支持</span></td></tr>
+      <tr><td>多标签路径获取</td><td><span class="tag tag-a">N/A</span></td><td><span class="tag tag-c">支持</span></td></tr>
+      <tr><td>XAML Islands / WinUI 3</td><td><span class="tag tag-c">支持</span></td><td><span class="tag tag-c">支持</span></td></tr>
+      <tr><td>AcrylicBackdrop</td><td><span class="tag tag-b">受限</span></td><td><span class="tag tag-c">完整支持</span></td></tr>
+      <tr><td>Mica 背景</td><td><span class="tag tag-b">不支持</span></td><td><span class="tag tag-c">支持</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>8.2 多显示器与混合 DPI</h3>
+  <p>声明 <strong>Per-Monitor DPI Aware V2</strong>（manifest 或 <code>SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)</code>）。Overlay 创建时通过 <code>GetDpiForWindow(hwndDialog)</code> 获取对话框 DPI，按比例缩放所有尺寸。</p>
+
+  <h3>8.3 安全软件兼容</h3>
+  <div class="info-box amber">
+    <p><strong>可能触发启发式检测的行为：</strong></p>
+    <ul>
+      <li>全局 SetWinEventHook 监控所有窗口事件</li>
+      <li>SendInput 模拟键盘输入</li>
+      <li>UI Automation 跨进程读取/写入控件</li>
+    </ul>
+    <p><strong>缓解措施：</strong></p>
+    <ul>
+      <li>代码签名（EV 证书优先）</li>
+      <li>manifest 声明所需权限（uiAccess=false）</li>
+      <li>只在检测到文件对话框时才进行 UI Automation 操作，不做全局扫描</li>
+      <li>日志记录所有操作，方便用户向安全软件厂商申诉</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ==================== 9. 白名单 Schema ==================== -->
+<section id="whitelist-schema">
+  <h2>9. 白名单 JSON Schema</h2>
+
+  <p>白名单文件 <code>whitelist.json</code>，外置于 exe 旁，支持热更新（修改后无需重启，下次检测时重新加载）。</p>
+
+  <pre class="code-block">{
+  "version": 1,
+  "apps": [
+    {
+      "name": "Google Chrome",
+      "process_name": "chrome.exe",
+      "enabled": true,
+      "verified": true,
+      "detect": {
+        "window_class": "Chrome_WidgetWin_1",
+        "uia_conditions": [
+          { "role": "Edit", "name_contains": "文件名|File name" },
+          { "role": "Button", "name_contains": "打开|Open|保存|Save" }
+        ],
+        "min_match_count": 2
+      },
+      "navigate": {
+        "method": "uia_set_value",
+        "target_control": {
+          "role": "Edit",
+          "name_contains": "文件名|File name"
+        },
+        "confirm": {
+          "role": "Button",
+          "name_contains": "打开|Open|保存|Save"
+        }
+      }
+    },
+    {
+      "name": "Visual Studio Code",
+      "process_name": "Code.exe",
+      "enabled": true,
+      "verified": true,
+      "detect": {
+        "uia_conditions": [
+          { "role": "Edit", "automation_id": "1148" },
+          { "role": "Button", "name_contains": "打开|Open" }
+        ],
+        "min_match_count": 2
+      },
+      "navigate": {
+        "method": "clipboard_set",
+        "target_control": { "role": "Edit" },
+        "confirm": { "method": "send_keys", "keys": "{ENTER}" }
+      }
+    },
+    {
+      "name": "Microsoft Word",
+      "process_name": "WINWORD.EXE",
+      "enabled": true,
+      "verified": false,
+      "detect": {
+        "window_class": "NUIDialog",
+        "uia_conditions": [
+          { "role": "Edit", "name_contains": "文件名" },
+          { "role": "Button", "name_contains": "打开" }
+        ],
+        "min_match_count": 2
+      },
+      "navigate": {
+        "method": "uia_set_value",
+        "target_control": { "role": "Edit", "name_contains": "文件名" },
+        "confirm": { "role": "Button", "name_contains": "打开" }
+      }
+    }
+  ]
+}
+  </pre>
+
+  <h3>9.1 字段说明</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>apps[].name</td><td>string</td><td>是</td><td>应用显示名称，仅用于标识</td></tr>
+      <tr><td>apps[].process_name</td><td>string</td><td>是</td><td>进程名（含 .exe），用于快速匹配前台窗口</td></tr>
+      <tr><td>apps[].enabled</td><td>bool</td><td>否</td><td>是否启用，默认 true</td></tr>
+      <tr><td>apps[].verified</td><td>bool</td><td>否</td><td>是否经过实际测试，默认 false</td></tr>
+      <tr><td>apps[].detect.window_class</td><td>string</td><td>否</td><td>窗口类名精确匹配</td></tr>
+      <tr><td>apps[].detect.uia_conditions</td><td>array</td><td>是</td><td>UI Automation 控件特征列表</td></tr>
+      <tr><td>apps[].detect.min_match_count</td><td>int</td><td>否</td><td>最少命中数，默认 uia_conditions 长度</td></tr>
+      <tr><td>apps[].navigate.method</td><td>string</td><td>是</td><td>"uia_set_value" 或 "clipboard_set"</td></tr>
+      <tr><td>apps[].navigate.target_control</td><td>object</td><td>是</td><td>目标编辑框的 UIA 特征</td></tr>
+      <tr><td>apps[].navigate.confirm</td><td>object</td><td>是</td><td>确认操作：Button Invoke 或 send_keys</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>9.2 uia_conditions 语法</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>字段</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>role</td><td>UIA 控件类型：Edit, Button, ComboBox, TabItem 等</td></tr>
+      <tr><td>name_contains</td><td>控件 Name 属性包含的文本，多语言用 | 分隔</td></tr>
+      <tr><td>automation_id</td><td>控件 AutomationId 精确匹配</td></tr>
+      <tr><td>class_name</td><td>控件 ClassName 精确匹配</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ==================== 10. 路线图 ==================== -->
+<section id="roadmap">
+  <h2>10. 开发路线图</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="phase">P0 — 基础可用 (2-3 周)</div>
+      <div class="desc">
+        <ul>
+          <li>标准对话框检测（#32770 + 控件特征验证）</li>
+          <li>IShellWindows 遍历获取资源管理器打开路径</li>
+          <li>基础 Overlay 窗口（Win32 宿主 + 简单 ListView，先不用 WinUI 3）</li>
+          <li>标准对话框导航注入（SendMessage WM_SETTEXT + BM_CLICK）</li>
+          <li>Named Mutex 防多开</li>
+          <li>系统托盘图标 + 退出菜单</li>
+        </ul>
+        <p><strong>交付物：</strong>能对标准文件对话框显示文件夹列表并一键导航。</p>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="phase">P1 — 白名单引擎 + 主流应用适配 (2-3 周)</div>
+      <div class="desc">
+        <ul>
+          <li>白名单 JSON 引擎实现（加载、匹配、热更新）</li>
+          <li>白名单适配：Chrome, Edge, Firefox, VS Code, Office (Word/Excel/PPT)</li>
+          <li>UI Automation 导航注入（uia_set_value + clipboard_set 两种策略）</li>
+          <li>Registry Run Key 自启动</li>
+          <li>配置管理（config.json + 托盘菜单设置入口）</li>
+          <li>轻量日志系统</li>
+        </ul>
+        <p><strong>交付物：</strong>覆盖主流应用，后台常驻运行，开机自启。</p>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="phase">P2 — WinUI 3 升级 + 体验完善 (2-3 周)</div>
+      <div class="desc">
+        <ul>
+          <li>Overlay 渲染升级为 WinUI 3 XAML Islands（Acrylic、圆角、原生动画）</li>
+          <li>Win11 多标签路径获取</li>
+          <li>暗色/亮色主题自动切换</li>
+          <li>Per-Monitor DPI 适配</li>
+          <li>UAC 提权窗口检测 + Toast 提示</li>
+          <li>更多白名单应用适配（Adobe 系列、WPS、JetBrains IDE 等）</li>
+          <li>性能优化、内存占用优化</li>
+        </ul>
+        <p><strong>交付物：</strong>视觉体验完善，Win11 原生风格，广泛兼容。</p>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="phase">P3 — 打磨与发布 (1-2 周)</div>
+      <div class="desc">
+        <ul>
+          <li>代码签名</li>
+          <li>安全软件兼容性测试</li>
+          <li>用户文档 / README</li>
+          <li>GitHub 发布 + 社区白名单贡献机制</li>
+          <li>崩溃日志收集（可选）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 11. 目录结构 ==================== -->
+<section id="dir-structure">
+  <h2>11. 项目目录结构</h2>
+
+  <pre class="dir-tree">
+EasyAccess/
+├── <span class="dir">CMakeLists.txt</span>                     <span class="comment"># 顶层 CMake 配置</span>
+├── <span class="file">vcpkg.json</span>                         <span class="comment"># vcpkg 依赖声明</span>
+├── <span class="file">EasyAccess.exe.manifest</span>            <span class="comment"># DPI 感知 + uiAccess 声明</span>
+├── <span class="dir">src/</span>
+│   ├── <span class="file">main.cpp</span>                       <span class="comment"># 入口: SingleInstance + AutoStart 检查 + 消息泵</span>
+│   ├── <span class="file">app.h / app.cpp</span>                <span class="comment"># Application 生命周期管理</span>
+│   │
+│   ├── <span class="dir">core/</span>                          <span class="comment"># 核心逻辑层</span>
+│   │   ├── <span class="file">dialog_detector.h/cpp</span>      <span class="comment"># 文件对话框检测引擎</span>
+│   │   ├── <span class="file">whitelist_engine.h/cpp</span>     <span class="comment"># 白名单匹配与热加载</span>
+│   │   ├── <span class="file">folder_collector.h/cpp</span>     <span class="comment"># IShellWindows 遍历 + Win11 多标签</span>
+│   │   └── <span class="file">navigator.h/cpp</span>            <span class="comment"># 路径导航注入 (uia/clipboard)</span>
+│   │
+│   ├── <span class="dir">system/</span>                        <span class="comment"># 系统交互层</span>
+│   │   ├── <span class="file">win_event_hook.h/cpp</span>       <span class="comment"># SetWinEventHook 封装</span>
+│   │   ├── <span class="file">shell_windows.h/cpp</span>        <span class="comment"># IShellWindows COM 封装</span>
+│   │   ├── <span class="file">ui_automation.h/cpp</span>        <span class="comment"># UI Automation 封装</span>
+│   │   └── <span class="file">input_simulator.h/cpp</span>      <span class="comment"># SendInput 模拟</span>
+│   │
+│   ├── <span class="dir">ui/</span>                            <span class="comment"># UI 层</span>
+│   │   ├── <span class="file">overlay_window.h/cpp</span>       <span class="comment"># Win32 宿主 + XAML Islands 管理</span>
+│   │   ├── <span class="file">overlay_content.xaml</span>       <span class="comment"># XAML 模板 (WinUI 3 ListView)</span>
+│   │   ├── <span class="file">overlay_content.xaml.h/cpp</span> <span class="comment"># XAML 后端代码</span>
+│   │   ├── <span class="file">tray_icon.h/cpp</span>            <span class="comment"># Shell_NotifyIcon 托盘</span>
+│   │   └── <span class="file">theme_manager.h/cpp</span>        <span class="comment"># 暗色/亮色主题适配</span>
+│   │
+│   ├── <span class="dir">infra/</span>                         <span class="comment"># 基础设施层</span>
+│   │   ├── <span class="file">single_instance.h/cpp</span>      <span class="comment"># Named Mutex 防多开</span>
+│   │   ├── <span class="file">auto_start.h/cpp</span>           <span class="comment"># Registry Run Key 自启</span>
+│   │   ├── <span class="file">config_manager.h/cpp</span>       <span class="comment"># JSON 配置管理</span>
+│   │   └── <span class="file">logger.h/cpp</span>               <span class="comment"># 文件日志</span>
+│   │
+│   └── <span class="dir">util/</span>
+│       ├── <span class="file">com_initializer.h</span>          <span class="comment"># RAII COM 初始化</span>
+│       ├── <span class="file">dpi_awareness.h</span>            <span class="comment"># DPI 适配工具</span>
+│       ├── <span class="file">window_util.h/cpp</span>          <span class="comment"># 窗口工具函数</span>
+│       └── <span class="file">string_util.h</span>              <span class="comment"># URL 解码、字符串工具</span>
+│
+├── <span class="dir">config/</span>
+│   ├── <span class="file">config.json</span>                    <span class="comment"># 用户配置</span>
+│   └── <span class="file">whitelist.json</span>                 <span class="comment"># 白名单应用配置</span>
+│
+├── <span class="dir">assets/</span>
+│   ├── <span class="file">icon.ico</span>                       <span class="comment"># 应用图标</span>
+│   └── <span class="file">tray_icon.ico</span>                  <span class="comment"># 托盘图标</span>
+│
+└── <span class="dir">docs/</span>
+    └── <span class="file">EasyAccess-Development-Guide.html</span>  <span class="comment"># 本文档</span>
+  </pre>
+</section>
+
+<footer>
+  EasyAccess Development Guide · v1.0 Draft · Generated 2026-06-17
+</footer>
+
+</div>
+</body>
+</html>
