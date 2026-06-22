@@ -112,18 +112,66 @@ namespace EasyAccess.Core
 
         private bool SetAddressText(IntPtr editHwnd, string path)
         {
+            _logger.Debug($"SetAddressText: hwnd={editHwnd}, path={path}");
+
+            var className = GetClassName(editHwnd);
+            _logger.Debug($"Control class: {className}");
+
+            if (className == "ToolbarWindow32")
+            {
+                _logger.Debug("Found breadcrumb, clicking to switch to edit mode...");
+                NativeMethods.SendMessage(editHwnd, NativeMethods.WM_LBUTTONDOWN, IntPtr.Zero, IntPtr.Zero);
+                NativeMethods.SendMessage(editHwnd, NativeMethods.WM_LBUTTONUP, IntPtr.Zero, IntPtr.Zero);
+                global::System.Threading.Thread.Sleep(300);
+
+                var editControl = FindEditInAddressBar(editHwnd);
+                if (editControl != IntPtr.Zero)
+                {
+                    _logger.Debug($"Found edit control after click: {editControl}");
+                    editHwnd = editControl;
+                }
+                else
+                {
+                    _logger.Warn("Could not find edit control after clicking breadcrumb");
+                    return false;
+                }
+            }
+
             NativeMethods.SetForegroundWindow(editHwnd);
             global::System.Threading.Thread.Sleep(100);
 
             NativeMethods.SendMessage(editHwnd, NativeMethods.WM_SETTEXT, IntPtr.Zero, path);
-            global::System.Threading.Thread.Sleep(50);
-
-            NativeMethods.SendMessage(editHwnd, NativeMethods.WM_SETTEXT, IntPtr.Zero, path);
-            global::System.Threading.Thread.Sleep(50);
+            global::System.Threading.Thread.Sleep(100);
 
             SendEnterKey(editHwnd);
+            _logger.Debug("Enter key sent");
 
             return true;
+        }
+
+        private IntPtr FindEditInAddressBar(IntPtr breadcrumbHwnd)
+        {
+            var parent = NativeMethods.GetParent(breadcrumbHwnd);
+            if (parent == IntPtr.Zero)
+                return IntPtr.Zero;
+
+            var grandParent = NativeMethods.GetParent(parent);
+            if (grandParent == IntPtr.Zero)
+                return IntPtr.Zero;
+
+            var comboBoxExHwnd = FindChildByClass(grandParent, "ComboBoxEx32");
+            if (comboBoxExHwnd != IntPtr.Zero)
+            {
+                var comboBoxHwnd = FindChildByClass(comboBoxExHwnd, "ComboBox");
+                if (comboBoxHwnd != IntPtr.Zero)
+                {
+                    var editHwnd = FindChildByClass(comboBoxHwnd, "Edit");
+                    if (editHwnd != IntPtr.Zero)
+                        return editHwnd;
+                }
+            }
+
+            return IntPtr.Zero;
         }
 
         private void SendEnterKey(IntPtr targetHwnd)

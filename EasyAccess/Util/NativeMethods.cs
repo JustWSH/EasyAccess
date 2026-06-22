@@ -29,6 +29,8 @@ namespace EasyAccess.Util
         public const int BM_CLICK = 0x00F5;
         public const int WM_CLOSE = 0x0010;
         public const int WM_USER = 0x0400;
+        public const int WM_LBUTTONDOWN = 0x0201;
+        public const int WM_LBUTTONUP = 0x0202;
 
         public const int SWP_NOSIZE = 0x0001;
         public const int SWP_NOMOVE = 0x0002;
@@ -97,6 +99,9 @@ namespace EasyAccess.Util
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool IsWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr GetParent(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool IsWindowVisible(IntPtr hWnd);
