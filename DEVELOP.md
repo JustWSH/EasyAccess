@@ -23,19 +23,24 @@ EasyAccess/
 │   ├── EasyAccess.csproj
 │   ├── app.manifest
 │   ├── App.xaml / App.xaml.cs
-│   ├── MainWindow.xaml / .cs
-│   ├── Core/                       # (规划中) 核心逻辑
-│   ├── System/                     # (规划中) P/Invoke & COM 互操作
-│   ├── UI/                         # (规划中) UI 组件
-│   ├── Infra/                      # (规划中) 基础设施
-│   └── Util/                       # (规划中) 工具类
+│   ├── MainWindow.xaml / .cs       # 主窗口（当前为空窗口 + Mica 背景）
+│   └── Properties/
+│       └── PublishProfiles/
 ├── EasyAccess (Package)/           # WAP 打包项目（Unpackaged 模式下不使用）
-├── config/                         # (规划中) 运行时配置
-│   ├── config.json
-│   └── whitelist.json
+├── utilitys/                       # C++ 辅助工具（CMake 构建）
+│   ├── PrintWindows/               # 窗口元素查看器（Win32 API）
+│   │   ├── CMakeLists.txt
+│   │   ├── main.cpp
+│   │   └── WindowElements/
+│   └── ProbeUia/                   # UI Automation 树查看器
+│       ├── CMakeLists.txt
+│       ├── main.cpp
+│       └── WindowElements/
 └── docs/
     ├── EasyAccess-Development-Guide.html      # 开发指导 v1 (C++ 方案)
-    └── EasyAccess-Development-Guide-v2.html   # 开发指导 v2 (C# 方案)
+    ├── EasyAccess-Development-Guide-v2.html   # 开发指导 v2 (C# 方案)
+    └── compose/
+        └── plans/
 ```
 
 ## 构建
@@ -51,6 +56,12 @@ dotnet publish -c Release -r win-x64 /p:PublishSingleFile=true
 **Debug vs Release 模式**：
 - **Debug**：依赖本地安装的 Windows App Runtime，用于开发调试
 - **Release**：Self-Contained + WindowsAppSDKSelfContained，产物可独立运行
+
+**CMake 辅助工具构建**（utilitys/ 目录）：
+```bash
+cd utilitys/PrintWindows && cmake -B build && cmake --build build --config Release
+cd utilitys/ProbeUia && cmake -B build && cmake --build build --config Release
+```
 
 ## 依赖
 
@@ -79,7 +90,11 @@ dotnet publish -c Release -r win-x64 /p:PublishSingleFile=true
 
 ## 当前状态
 
-早期开发阶段。已从 WinUI 3 模板创建项目脚手架，核心模块尚未实现。
+早期开发阶段。已从 WinUI 3 模板创建项目脚手架，MainWindow 使用 Mica 背景，核心模块尚未实现。
+
+已创建 C++ 辅助工具：
+- **PrintWindows**：按 F9 打印前台窗口的 Win32 窗口树（句柄、类名、标题、位置）
+- **ProbeUia**：按 F9 打印前台窗口的 UI Automation 树（控件类型、Name、AutomationId）
 
 ## 文档
 

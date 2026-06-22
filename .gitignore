@@ -70,3 +70,6 @@ Desktop.ini
 EasyAccess (Package)/bin/
 EasyAccess (Package)/obj/
 EasyAccess (Package)/AppPackages/
+
+# CMake
+**/build/
