@@ -1,50 +1,162 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using global::System;
+using global::System.Threading.Tasks;
+using EasyAccess.Core;
+using EasyAccess.Infra;
+using EasyAccess.System;
+using EasyAccess.UI;
+using EasyAccess.Util;
 
 namespace EasyAccess
 {
-    /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
-    /// </summary>
     public partial class App : Application
     {
         private Window? _window;
+        private SingleInstance? _singleInstance;
+        private Logger? _logger;
+        private ConfigManager? _configManager;
+        private WinEventHook? _winEventHook;
+        private DialogDetector? _dialogDetector;
+        private FolderCollector? _folderCollector;
+        private Navigator? _navigator;
+        private OverlayWindow? _overlay;
+        private TrayIcon? _trayIcon;
+        private IntPtr _currentDialogHwnd;
+        private bool _initialized;
 
-        /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
-        /// executed, and as such is the logical equivalent of main() or WinMain().
-        /// </summary>
         public App()
         {
             InitializeComponent();
         }
 
-        /// <summary>
-        /// Invoked when the application is launched.
-        /// </summary>
-        /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            _singleInstance = new SingleInstance();
+            if (!_singleInstance.IsFirstInstance)
+            {
+                _singleInstance.TryActivateExisting();
+                Current.Exit();
+                return;
+            }
+
+            var configDir = ConfigManager.GetDefaultConfigDirectory();
+            var logDir = global::System.IO.Path.Combine(configDir, "logs");
+
+            _logger = new Logger(logDir, LogLevel.Debug);
+            _logger.Info($"Log directory: {logDir}");
+            _logger.Info($"Config directory: {configDir}");
+            _configManager = new ConfigManager(configDir);
+            _configManager.Load();
+
+            _logger.Info("EasyAccess starting...");
+
             _window = new MainWindow();
             _window.Activate();
+
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(_window);
+
+            _dialogDetector = new DialogDetector(_logger);
+            _folderCollector = new FolderCollector(_logger);
+            _navigator = new Navigator(_logger);
+
+            _overlay = new OverlayWindow(hwnd);
+            _overlay.FolderSelected += OnFolderSelected;
+
+            _trayIcon = new TrayIcon(_window);
+            _trayIcon.ExitRequested += OnExitRequested;
+
+            _winEventHook = new WinEventHook(_logger);
+            _winEventHook.DialogCreated += OnDialogCreated;
+            _winEventHook.DialogDestroyed += OnDialogDestroyed;
+            _winEventHook.ForegroundChanged += OnForegroundChanged;
+
+            if (!_winEventHook.Install())
+            {
+                _logger.Error("Failed to install window event hook");
+            }
+
+            _initialized = true;
+            _logger.Info("EasyAccess initialized");
+        }
+
+        private async void OnDialogCreated(IntPtr hwnd)
+        {
+            if (!_initialized)
+                return;
+
+            if (_dialogDetector!.IsFileDialog(hwnd))
+            {
+                _logger.Info($"File dialog detected: {hwnd}");
+                _currentDialogHwnd = hwnd;
+                await ShowOverlayForDialog(hwnd);
+            }
+        }
+
+        private void OnDialogDestroyed(IntPtr hwnd)
+        {
+            if (hwnd == _currentDialogHwnd)
+            {
+                _logger.Info($"Dialog destroyed: {hwnd}");
+                _currentDialogHwnd = IntPtr.Zero;
+                _overlay?.HideOverlay();
+            }
+        }
+
+        private async void OnForegroundChanged(IntPtr hwnd)
+        {
+            if (!_initialized)
+                return;
+
+            if (_dialogDetector!.IsFileDialog(hwnd))
+            {
+                _logger.Info($"File dialog brought to foreground: {hwnd}");
+                _currentDialogHwnd = hwnd;
+                await ShowOverlayForDialog(hwnd);
+            }
+            else if (hwnd != _currentDialogHwnd && _currentDialogHwnd != IntPtr.Zero)
+            {
+            }
+        }
+
+        private async Task ShowOverlayForDialog(IntPtr dialogHwnd)
+        {
+            var folders = await _folderCollector!.GetOpenFoldersAsync();
+            if (folders.Count > 0)
+            {
+                _overlay!.UpdateFolders(folders);
+                _overlay.ShowOverlay(dialogHwnd);
+            }
+            else
+            {
+                _logger.Info("No open folders found");
+                _overlay?.HideOverlay();
+            }
+        }
+
+        private async void OnFolderSelected(string path)
+        {
+            if (_currentDialogHwnd == IntPtr.Zero)
+                return;
+
+            _logger.Info($"User selected folder: {path}");
+
+            var success = await _navigator!.NavigateToAsync(_currentDialogHwnd, path);
+            if (!success)
+            {
+                _logger.Warn("Navigation failed");
+            }
+        }
+
+        private void OnExitRequested()
+        {
+            _logger.Info("Exit requested");
+            _winEventHook?.Dispose();
+            _overlay?.Close();
+            _trayIcon?.Dispose();
+            _singleInstance?.Dispose();
+            _logger?.Dispose();
+            Current.Exit();
         }
     }
 }

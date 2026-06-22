@@ -90,11 +90,50 @@ cd utilitys/ProbeUia && cmake -B build && cmake --build build --config Release
 
 ## 当前状态
 
-早期开发阶段。已从 WinUI 3 模板创建项目脚手架，MainWindow 使用 Mica 背景，核心模块尚未实现。
+P0 阶段已完成。实现了以下功能：
 
-已创建 C++ 辅助工具：
-- **PrintWindows**：按 F9 打印前台窗口的 Win32 窗口树（句柄、类名、标题、位置）
-- **ProbeUia**：按 F9 打印前台窗口的 UI Automation 树（控件类型、Name、AutomationId）
+### 已实现功能
+- **标准对话框检测**：通过 `#32770` 类名和控件特征（Edit + ComboBox + Button）检测标准文件对话框
+- **文件夹列表收集**：通过 `Shell.Application` COM 接口遍历资源管理器打开的文件夹
+- **Overlay 窗口**：WinUI 3 窗口，显示在对话框底部，使用 AcrylicBackdrop 背景
+- **导航注入**：通过地址栏输入路径并模拟 Enter 键导航到目标文件夹
+- **防多开**：Named Mutex 实现单实例运行
+- **系统托盘图标**：显示托盘图标，支持右键退出菜单
+
+### 项目结构
+```
+EasyAccess/
+├── EasyAccess/
+│   ├── App.xaml.cs              # 应用入口，集成所有模块
+│   ├── MainWindow.xaml.cs       # 隐藏主窗口
+│   ├── Core/
+│   │   ├── DialogDetector.cs    # 对话框检测引擎
+│   │   ├── FolderCollector.cs   # 文件夹列表收集
+│   │   └── Navigator.cs         # 路径导航注入
+│   ├── Infra/
+│   │   ├── ConfigManager.cs     # JSON 配置管理
+│   │   ├── Logger.cs            # 文件日志
+│   │   └── SingleInstance.cs    # 防多开
+│   ├── System/
+│   │   ├── WinEventHook.cs      # SetWinEventHook 封装
+│   │   └── ShellWindowsInterop.cs # Shell COM 封装
+│   ├── UI/
+│   │   ├── OverlayWindow.xaml.cs # WinUI 3 覆盖层窗口
+│   │   └── TrayIcon.cs          # 系统托盘图标
+│   └── Util/
+│       └── NativeMethods.cs     # P/Invoke 签名
+└── config/
+    └── whitelist.json           # 白名单配置（预留）
+```
+
+### 构建命令
+```bash
+# 开发构建
+dotnet build EasyAccess/EasyAccess.csproj
+
+# 运行
+dotnet run --project EasyAccess/EasyAccess.csproj
+```
 
 ## 文档
 

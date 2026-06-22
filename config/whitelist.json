@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "apps": [
+    {
+      "name": "Google Chrome",
+      "process_name": "chrome.exe",
+      "enabled": true,
+      "verified": false,
+      "detect": {
+        "window_class": "Chrome_WidgetWin_1",
+        "uia_conditions": [
+          { "role": "Edit", "name_contains": "文件名|File name" },
+          { "role": "Button", "name_contains": "打开|Open|保存|Save" }
+        ],
+        "min_match_count": 2
+      },
+      "navigate": {
+        "method": "clipboard_set",
+        "target_control": { "role": "Edit", "name_contains": "文件名|File name" },
+        "confirm": { "method": "send_keys", "keys": "{ENTER}" }
+      }
+    },
+    {
+      "name": "Microsoft Edge",
+      "process_name": "msedge.exe",
+      "enabled": true,
+      "verified": false,
+      "detect": {
+        "window_class": "Chrome_WidgetWin_1",
+        "uia_conditions": [
+          { "role": "Edit", "name_contains": "文件名|File name" },
+          { "role": "Button", "name_contains": "打开|Open|保存|Save" }
+        ],
+        "min_match_count": 2
+      },
+      "navigate": {
+        "method": "clipboard_set",
+        "target_control": { "role": "Edit", "name_contains": "文件名|File name" },
+        "confirm": { "method": "send_keys", "keys": "{ENTER}" }
+      }
+    },
+    {
+      "name": "Visual Studio Code",
+      "process_name": "Code.exe",
+      "enabled": true,
+      "verified": false,
+      "detect": {
+        "uia_conditions": [
+          { "role": "Edit", "automation_id": "1148" },
+          { "role": "Button", "name_contains": "打开|Open" }
+        ],
+        "min_match_count": 2
+      },
+      "navigate": {
+        "method": "clipboard_set",
+        "target_control": { "role": "Edit" },
+        "confirm": { "method": "send_keys", "keys": "{ENTER}" }
+      }
+    },
+    {
+      "name": "WPS Office",
+      "process_name": "wps.exe",
+      "enabled": true,
+      "verified": false,
+      "detect": {
+        "window_class": "Qt5QWindowIcon",
+        "uia_conditions": [
+          { "role": "Window", "class_name": "KcfdFileDialog" },
+          { "role": "Group", "class_name": "KcfdFilterWidget" },
+          { "role": "Button", "name_contains": "保存|Save" }
+        ],
+        "min_match_count": 2
+      },
+      "navigate": {
+        "method": "uia_set_value",
+        "target_control": { "role": "Edit", "class_name": "KcfdLocNavigationLineEdit" },
+        "confirm": { "role": "Button", "name_contains": "保存|Save" }
+      }
+    }
+  ]
+}
