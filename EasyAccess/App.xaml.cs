@@ -95,11 +95,13 @@ namespace EasyAccess
 
         private void OnDialogDestroyed(IntPtr hwnd)
         {
+            _logger.Debug($"OnDialogDestroyed called: hwnd={hwnd}, currentDialogHwnd={_currentDialogHwnd}");
             if (hwnd == _currentDialogHwnd)
             {
                 _logger.Info($"Dialog destroyed: {hwnd}");
                 _currentDialogHwnd = IntPtr.Zero;
                 _overlay?.HideOverlay();
+                _logger.Info("Overlay hidden");
             }
         }
 

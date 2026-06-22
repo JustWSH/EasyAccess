@@ -10,6 +10,7 @@ namespace EasyAccess.Util
         public const int GWL_STYLE = -16;
         public const int GWL_EXSTYLE = -20;
         public const int GWL_HWNDPARENT = -8;
+        public const int GWL_WNDPROC = -4;
 
         public const int WS_EX_TOOLWINDOW = 0x00000080;
         public const int WS_EX_NOACTIVATE = 0x08000000;
@@ -36,6 +37,9 @@ namespace EasyAccess.Util
         public const int SWP_NOMOVE = 0x0002;
         public const int SWP_NOACTIVATE = 0x0010;
         public const int SWP_SHOWWINDOW = 0x0040;
+
+        public const int SW_HIDE = 0;
+        public const int SW_SHOW = 5;
 
         public const int SMTO_ABORTIFHUNG = 0x0002;
 
@@ -104,6 +108,9 @@ namespace EasyAccess.Util
         public static extern IntPtr GetParent(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
         public static extern bool IsWindowVisible(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
@@ -114,6 +121,9 @@ namespace EasyAccess.Util
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr SetWindowLongPtrW(IntPtr hWnd, int nIndex, IntPtr dwNewLong);

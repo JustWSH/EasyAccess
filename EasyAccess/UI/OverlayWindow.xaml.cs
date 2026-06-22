@@ -126,9 +126,11 @@ namespace EasyAccess.UI
 
         public void ShowOverlay(IntPtr dialogHwnd)
         {
+            var windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+
             if (!_isVisible)
             {
-                this.AppWindow.Show(true);
+                NativeMethods.ShowWindow(windowHandle, NativeMethods.SW_SHOW);
                 _isVisible = true;
             }
 
@@ -139,7 +141,8 @@ namespace EasyAccess.UI
         {
             if (_isVisible)
             {
-                this.AppWindow.Show(false);
+                var windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+                NativeMethods.ShowWindow(windowHandle, NativeMethods.SW_HIDE);
                 _isVisible = false;
             }
         }

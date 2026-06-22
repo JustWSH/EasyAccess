@@ -4,12 +4,14 @@ using global::System;
 using global::System.Drawing;
 using global::System.IO;
 using global::System.Runtime.InteropServices;
+using EasyAccess.Util;
 
 namespace EasyAccess.UI
 {
     public sealed class TrayIcon : IDisposable
     {
         private readonly Window _mainWindow;
+        private readonly IntPtr _hwnd;
         private NotifyIconData _notifyIconData;
         private bool _disposed;
         private IntPtr _hIcon;
@@ -19,11 +21,12 @@ namespace EasyAccess.UI
         public TrayIcon(Window mainWindow)
         {
             _mainWindow = mainWindow;
+            _hwnd = WinRT.Interop.WindowNative.GetWindowHandle(mainWindow);
 
             _notifyIconData = new NotifyIconData
             {
                 cbSize = Marshal.SizeOf<NotifyIconData>(),
-                hWnd = WinRT.Interop.WindowNative.GetWindowHandle(mainWindow),
+                hWnd = _hwnd,
                 uID = 1,
                 uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE,
                 uCallbackMessage = WM_TRAYICON,
@@ -32,6 +35,38 @@ namespace EasyAccess.UI
 
             LoadIcon();
             Shell_NotifyIcon(NIM_ADD, ref _notifyIconData);
+
+            SubclassWindow();
+        }
+
+        private void SubclassWindow()
+        {
+            _wndProc = WndProc;
+            _oldWndProc = NativeMethods.GetWindowLongPtrW(_hwnd, NativeMethods.GWL_WNDPROC);
+            NativeMethods.SetWindowLongPtrW(_hwnd, NativeMethods.GWL_WNDPROC,
+                Marshal.GetFunctionPointerForDelegate(_wndProc));
+        }
+
+        private IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+        {
+            if (msg == WM_TRAYICON)
+            {
+                int lParamInt = lParam.ToInt32();
+                if (lParamInt == WM_RBUTTONUP)
+                {
+                    ShowContextMenu();
+                }
+            }
+            else if (msg == WM_COMMAND)
+            {
+                int commandId = wParam.ToInt32() & 0xFFFF;
+                if (commandId == ID_EXIT)
+                {
+                    ExitRequested?.Invoke();
+                }
+            }
+
+            return NativeMethods.CallWindowProc(_oldWndProc, hWnd, msg, wParam, lParam);
         }
 
         private void LoadIcon()
@@ -49,28 +84,14 @@ namespace EasyAccess.UI
             _notifyIconData.hIcon = _hIcon;
         }
 
-        public void HandleMessage(int msg, IntPtr lParam)
-        {
-            if (msg == WM_TRAYICON)
-            {
-                switch (lParam.ToInt32())
-                {
-                    case WM_RBUTTONUP:
-                        ShowContextMenu();
-                        break;
-                }
-            }
-        }
-
         private void ShowContextMenu()
         {
             var menu = CreatePopupMenu();
-
             AppendMenu(menu, MF_STRING, ID_EXIT, "退出(&X)");
 
             GetCursorPos(out var point);
-            SetForegroundWindow(_notifyIconData.hWnd);
-            TrackPopupMenu(menu, TPM_RIGHTBUTTON, point.X, point.Y, 0, _notifyIconData.hWnd, IntPtr.Zero);
+            SetForegroundWindow(_hwnd);
+            TrackPopupMenu(menu, TPM_RIGHTBUTTON, point.X, point.Y, 0, _hwnd, IntPtr.Zero);
             DestroyMenu(menu);
         }
 
@@ -96,8 +117,14 @@ namespace EasyAccess.UI
 
         #region Native
 
+        private delegate IntPtr Win32WindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        private Win32WindowProc? _wndProc;
+        private IntPtr _oldWndProc;
+
         private const int WM_TRAYICON = 0x0400 + 1;
         private const int WM_RBUTTONUP = 0x0205;
+        private const int WM_COMMAND = 0x0111;
         private const int NIF_ICON = 0x00000002;
         private const int NIF_TIP = 0x00000004;
         private const int NIF_MESSAGE = 0x00000001;
