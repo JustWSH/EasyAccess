@@ -43,6 +43,9 @@ namespace EasyAccess.Util
 
         public const int SMTO_ABORTIFHUNG = 0x0002;
 
+        public const uint PROCESS_QUERY_INFORMATION = 0x0400;
+        public const uint TOKEN_QUERY = 0x0008;
+
         #endregion
 
         #region Delegates

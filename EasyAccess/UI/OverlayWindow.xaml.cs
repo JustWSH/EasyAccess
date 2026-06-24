@@ -3,6 +3,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using global::System;
 using global::System.Collections.Generic;
 using global::System.Collections.ObjectModel;
@@ -24,9 +25,11 @@ namespace EasyAccess.UI
     {
         private readonly IntPtr _ownerHwnd;
         private readonly ListView _listView;
+        private readonly Border _border;
         private readonly ObservableCollection<FolderItem> _items = new();
         private IntPtr _hwnd;
         private bool _isVisible;
+        private bool _isDarkTheme;
 
         public event Action<string>? FolderSelected;
 
@@ -47,16 +50,18 @@ namespace EasyAccess.UI
             _listView.ItemTemplate = CreateItemTemplate();
             _listView.ItemClick += OnItemClick;
 
-            var border = new Border
+            _border = new Border
             {
                 Child = _listView,
-                BorderBrush = new SolidColorBrush(Colors.Gray),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
                 Margin = new Thickness(16, 0, 16, 8)
             };
 
-            Content = border;
+            Content = _border;
+
+            _isDarkTheme = IsSystemDarkTheme();
+            ApplyTheme();
 
             var presenter = GetAppWindow().Presenter as OverlappedPresenter;
             if (presenter != null)
@@ -80,7 +85,7 @@ namespace EasyAccess.UI
               xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
     <StackPanel Spacing=""2"" Padding=""12,8"">
         <TextBlock Text=""{Binding Name}"" FontSize=""14"" FontWeight=""SemiBold"" TextTrimming=""CharacterEllipsis""/>
-        <TextBlock Text=""{Binding DisplayPath}"" FontSize=""12"" Foreground=""Gray"" TextTrimming=""CharacterEllipsis""/>
+        <TextBlock Text=""{Binding DisplayPath}"" FontSize=""12"" Opacity=""0.6"" TextTrimming=""CharacterEllipsis""/>
     </StackPanel>
 </DataTemplate>";
 
@@ -106,6 +111,48 @@ namespace EasyAccess.UI
                     new IntPtr(exStyle.ToInt64() | NativeMethods.WS_EX_NOACTIVATE | NativeMethods.WS_EX_TOOLWINDOW));
 
                 NativeMethods.SetWindowLongPtrW(_hwnd, NativeMethods.GWL_HWNDPARENT, _ownerHwnd);
+            }
+
+            var isDark = IsSystemDarkTheme();
+            if (isDark != _isDarkTheme)
+            {
+                _isDarkTheme = isDark;
+                ApplyTheme();
+            }
+        }
+
+        private static bool IsSystemDarkTheme()
+        {
+            try
+            {
+                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+                if (key != null)
+                {
+                    var value = key.GetValue("AppsUseLightTheme");
+                    if (value is int intValue)
+                        return intValue == 0;
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private void ApplyTheme()
+        {
+            if (_isDarkTheme)
+            {
+                _border.Background = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 45, G = 45, B = 45 });
+                _border.BorderBrush = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 64, G = 64, B = 64 });
+                _listView.Background = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 45, G = 45, B = 45 });
+                _listView.Foreground = new SolidColorBrush(Colors.White);
+            }
+            else
+            {
+                _border.Background = new SolidColorBrush(Colors.White);
+                _border.BorderBrush = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 224, G = 224, B = 224 });
+                _listView.Background = new SolidColorBrush(Colors.White);
+                _listView.Foreground = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 26, G = 26, B = 26 });
             }
         }
 
@@ -154,10 +201,16 @@ namespace EasyAccess.UI
             var dpi = NativeMethods.GetDpiForWindow(dialogHwnd);
             var scale = dpi / 96.0;
 
-            var overlayWidth = (int)(dialogRect.Width * scale);
-            var overlayHeight = (int)(_items.Count <= 3 ? _items.Count * 60 + 20 : 320);
-            var x = dialogRect.Left;
-            var y = dialogRect.Bottom - overlayHeight;
+            var marginX = (int)(16 * scale);
+            var gap = (int)(4 * scale);
+            var itemHeight = (int)(60 * scale);
+
+            var overlayWidth = dialogRect.Width - (marginX * 2);
+            var overlayHeight = _items.Count <= 3
+                ? (int)(_items.Count * itemHeight + 16 * scale)
+                : (int)(320 * scale);
+            var x = dialogRect.Left + marginX;
+            var y = dialogRect.Bottom + gap;
 
             var windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
             NativeMethods.SetWindowPos(windowHandle, IntPtr.Zero, x, y, overlayWidth, overlayHeight,

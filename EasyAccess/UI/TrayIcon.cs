@@ -1,9 +1,8 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using global::System;
-using global::System.Drawing;
 using global::System.IO;
 using global::System.Runtime.InteropServices;
+using EasyAccess.Infra;
 using EasyAccess.Util;
 
 namespace EasyAccess.UI
@@ -12,16 +11,20 @@ namespace EasyAccess.UI
     {
         private readonly Window _mainWindow;
         private readonly IntPtr _hwnd;
+        private readonly AppConfig _config;
+        private readonly Action _saveConfig;
         private NotifyIconData _notifyIconData;
         private bool _disposed;
         private IntPtr _hIcon;
 
         public event Action? ExitRequested;
 
-        public TrayIcon(Window mainWindow)
+        public TrayIcon(Window mainWindow, AppConfig config, Action saveConfig)
         {
             _mainWindow = mainWindow;
             _hwnd = WinRT.Interop.WindowNative.GetWindowHandle(mainWindow);
+            _config = config;
+            _saveConfig = saveConfig;
 
             _notifyIconData = new NotifyIconData
             {
@@ -60,10 +63,7 @@ namespace EasyAccess.UI
             else if (msg == WM_COMMAND)
             {
                 int commandId = wParam.ToInt32() & 0xFFFF;
-                if (commandId == ID_EXIT)
-                {
-                    ExitRequested?.Invoke();
-                }
+                HandleCommand(commandId);
             }
 
             return NativeMethods.CallWindowProc(_oldWndProc, hWnd, msg, wParam, lParam);
@@ -87,6 +87,29 @@ namespace EasyAccess.UI
         private void ShowContextMenu()
         {
             var menu = CreatePopupMenu();
+
+            // Show Overlay toggle
+            AppendMenu(menu, MF_STRING | (_config.ShowOverlayOnDetect ? MF_CHECKED : 0),
+                ID_TOGGLE_OVERLAY, "显示 Overlay(&O)");
+            AppendMenu(menu, MF_SEPARATOR, 0, "");
+
+            // Log level submenu
+            var logMenu = CreatePopupMenu();
+            AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "debug" ? MF_CHECKED : 0), ID_LOG_DEBUG, "Debug");
+            AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "info" ? MF_CHECKED : 0), ID_LOG_INFO, "Info");
+            AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "warn" ? MF_CHECKED : 0), ID_LOG_WARN, "Warn");
+            AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "error" ? MF_CHECKED : 0), ID_LOG_ERROR, "Error");
+            AppendMenu(menu, MF_POPUP, (int)logMenu, "日志级别(&L)");
+
+            // Max items submenu
+            var itemsMenu = CreatePopupMenu();
+            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 5 ? MF_CHECKED : 0), ID_ITEMS_5, "5");
+            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 10 ? MF_CHECKED : 0), ID_ITEMS_10, "10");
+            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 15 ? MF_CHECKED : 0), ID_ITEMS_15, "15");
+            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 20 ? MF_CHECKED : 0), ID_ITEMS_20, "20");
+            AppendMenu(menu, MF_POPUP, (int)itemsMenu, "最大项目数(&M)");
+
+            AppendMenu(menu, MF_SEPARATOR, 0, "");
             AppendMenu(menu, MF_STRING, ID_EXIT, "退出(&X)");
 
             GetCursorPos(out var point);
@@ -95,11 +118,49 @@ namespace EasyAccess.UI
             DestroyMenu(menu);
         }
 
-        public void HandleCommand(int commandId)
+        private void HandleCommand(int commandId)
         {
-            if (commandId == ID_EXIT)
+            switch (commandId)
             {
-                ExitRequested?.Invoke();
+                case ID_TOGGLE_OVERLAY:
+                    _config.ShowOverlayOnDetect = !_config.ShowOverlayOnDetect;
+                    _saveConfig();
+                    break;
+                case ID_LOG_DEBUG:
+                    _config.LogLevel = "debug";
+                    _saveConfig();
+                    break;
+                case ID_LOG_INFO:
+                    _config.LogLevel = "info";
+                    _saveConfig();
+                    break;
+                case ID_LOG_WARN:
+                    _config.LogLevel = "warn";
+                    _saveConfig();
+                    break;
+                case ID_LOG_ERROR:
+                    _config.LogLevel = "error";
+                    _saveConfig();
+                    break;
+                case ID_ITEMS_5:
+                    _config.MaxOverlayItems = 5;
+                    _saveConfig();
+                    break;
+                case ID_ITEMS_10:
+                    _config.MaxOverlayItems = 10;
+                    _saveConfig();
+                    break;
+                case ID_ITEMS_15:
+                    _config.MaxOverlayItems = 15;
+                    _saveConfig();
+                    break;
+                case ID_ITEMS_20:
+                    _config.MaxOverlayItems = 20;
+                    _saveConfig();
+                    break;
+                case ID_EXIT:
+                    ExitRequested?.Invoke();
+                    break;
             }
         }
 
@@ -131,9 +192,22 @@ namespace EasyAccess.UI
         private const int NIM_ADD = 0x00000000;
         private const int NIM_DELETE = 0x00000002;
         private const int MF_STRING = 0x00000000;
-        private const int ID_EXIT = 1001;
+        private const int MF_CHECKED = 0x00000008;
+        private const int MF_SEPARATOR = 0x00000800;
+        private const int MF_POPUP = 0x00000010;
         private const int TPM_RIGHTBUTTON = 0x0002;
         private const int IDI_APPLICATION = 32512;
+
+        private const int ID_TOGGLE_OVERLAY = 1001;
+        private const int ID_LOG_DEBUG = 1010;
+        private const int ID_LOG_INFO = 1011;
+        private const int ID_LOG_WARN = 1012;
+        private const int ID_LOG_ERROR = 1013;
+        private const int ID_ITEMS_5 = 1020;
+        private const int ID_ITEMS_10 = 1021;
+        private const int ID_ITEMS_15 = 1022;
+        private const int ID_ITEMS_20 = 1023;
+        private const int ID_EXIT = 1099;
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         private struct NotifyIconData

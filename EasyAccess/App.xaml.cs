@@ -7,6 +7,8 @@ using EasyAccess.Infra;
 using EasyAccess.System;
 using EasyAccess.UI;
 using EasyAccess.Util;
+using Windows.UI.Notifications;
+using Windows.Data.Xml.Dom;
 
 namespace EasyAccess
 {
@@ -63,7 +65,7 @@ namespace EasyAccess
             _overlay = new OverlayWindow(hwnd);
             _overlay.FolderSelected += OnFolderSelected;
 
-            _trayIcon = new TrayIcon(_window);
+            _trayIcon = new TrayIcon(_window, _configManager.Config, () => _configManager.Save());
             _trayIcon.ExitRequested += OnExitRequested;
 
             _winEventHook = new WinEventHook(_logger);
@@ -88,8 +90,60 @@ namespace EasyAccess
             if (_dialogDetector!.IsFileDialog(hwnd))
             {
                 _logger.Info($"File dialog detected: {hwnd}");
-                _currentDialogHwnd = hwnd;
-                await ShowOverlayForDialog(hwnd);
+
+                if (CheckUacPermission(hwnd))
+                {
+                    _currentDialogHwnd = hwnd;
+                    await ShowOverlayForDialog(hwnd);
+                }
+            }
+        }
+
+        private bool CheckUacPermission(IntPtr hwnd)
+        {
+            try
+            {
+                NativeMethods.GetWindowThreadProcessId(hwnd, out uint processId);
+                var isElevated = UacHelper.IsProcessElevated(processId);
+                var isCurrentElevated = UacHelper.IsCurrentProcessElevated();
+
+                if (isElevated && !isCurrentElevated)
+                {
+                    _logger.Warn($"Dialog hwnd={hwnd} is elevated (pid={processId}), but EasyAccess is not");
+                    ShowUacToast();
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("UAC check failed", ex);
+                return true;
+            }
+        }
+
+        private void ShowUacToast()
+        {
+            try
+            {
+                var toastXml = new XmlDocument();
+                toastXml.LoadXml(@"
+<toast>
+    <visual>
+        <binding template=""ToastGeneric"">
+            <text>EasyAccess</text>
+            <text>检测到管理员权限的对话框。请以管理员身份运行 EasyAccess 以支持此对话框。</text>
+        </binding>
+    </visual>
+</toast>");
+
+                var toast = new ToastNotification(toastXml);
+                ToastNotificationManager.CreateToastNotifier("EasyAccess").Show(toast);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Failed to show UAC toast", ex);
             }
         }
 

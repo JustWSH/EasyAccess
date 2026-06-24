@@ -12,11 +12,13 @@ namespace EasyAccess.System
         public string DisplayName { get; set; } = string.Empty;
         public string WindowTitle { get; set; } = string.Empty;
         public IntPtr Hwnd { get; set; }
+        public bool IsTab { get; set; }
     }
 
     internal sealed class ShellWindowsInterop
     {
         private readonly Logger _logger;
+        private static readonly Version Win11Version = new(10, 0, 22000, 0);
 
         public ShellWindowsInterop(Logger logger)
         {
@@ -39,6 +41,9 @@ namespace EasyAccess.System
                 dynamic shell = Activator.CreateInstance(shellWindowsType)!;
                 dynamic windows = shell.Windows;
 
+                var isWin11 = Environment.OSVersion.Version >= Win11Version;
+                _logger.Debug($"Windows version: {Environment.OSVersion.Version}, IsWin11: {isWin11}");
+
                 for (int i = 0; i < windows.Count; i++)
                 {
                     try
@@ -57,13 +62,18 @@ namespace EasyAccess.System
                         var path = UrlToPath(url);
                         if (!string.IsNullOrEmpty(path) && IsDirectoryExists(path))
                         {
-                            folders.Add(new ExplorerFolder
+                            var folder = new ExplorerFolder
                             {
                                 Path = path,
                                 DisplayName = title,
                                 WindowTitle = title,
                                 Hwnd = new IntPtr(hwndLong)
-                            });
+                            };
+
+                            if (!ContainsFolder(folders, path))
+                            {
+                                folders.Add(folder);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -81,6 +91,16 @@ namespace EasyAccess.System
             }
 
             return folders;
+        }
+
+        private static bool ContainsFolder(List<ExplorerFolder> folders, string path)
+        {
+            foreach (var folder in folders)
+            {
+                if (string.Equals(folder.Path, path, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
         }
 
         private static string UrlToPath(string url)

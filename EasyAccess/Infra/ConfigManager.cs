@@ -4,7 +4,7 @@ using global::System.Text.Json;
 
 namespace EasyAccess.Infra
 {
-    internal sealed class AppConfig
+    public sealed class AppConfig
     {
         public bool ShowOverlayOnDetect { get; set; } = true;
         public int MaxOverlayItems { get; set; } = 10;

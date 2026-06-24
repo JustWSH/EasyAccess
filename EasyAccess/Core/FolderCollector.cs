@@ -10,6 +10,9 @@ namespace EasyAccess.Core
     {
         private readonly ShellWindowsInterop _shellWindows;
         private readonly Logger _logger;
+        private List<ExplorerFolder>? _cachedFolders;
+        private DateTime _cacheTime;
+        private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(2);
 
         public FolderCollector(Logger logger)
         {
@@ -23,9 +26,19 @@ namespace EasyAccess.Core
             {
                 try
                 {
+                    if (_cachedFolders != null && DateTime.Now - _cacheTime < CacheDuration)
+                    {
+                        _logger.Debug($"Using cached folders ({_cachedFolders.Count} items)");
+                        return new List<ExplorerFolder>(_cachedFolders);
+                    }
+
                     var folders = _shellWindows.GetOpenFolders();
                     _logger.Info($"Found {folders.Count} open folders");
-                    return folders;
+
+                    _cachedFolders = folders;
+                    _cacheTime = DateTime.Now;
+
+                    return new List<ExplorerFolder>(folders);
                 }
                 catch (Exception ex)
                 {
@@ -33,6 +46,11 @@ namespace EasyAccess.Core
                     return new List<ExplorerFolder>();
                 }
             });
+        }
+
+        public void InvalidateCache()
+        {
+            _cachedFolders = null;
         }
     }
 }
