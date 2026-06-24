@@ -21,21 +21,24 @@ namespace EasyAccess.UI
         public string DisplayPath { get; set; } = string.Empty;
     }
 
-    public sealed class OverlayWindow : Window
+    internal sealed class OverlayWindow : Window
     {
         private readonly IntPtr _ownerHwnd;
         private readonly ListView _listView;
         private readonly Border _border;
+        private readonly Grid _root;
         private readonly ObservableCollection<FolderItem> _items = new();
+        private readonly EasyAccess.Infra.Logger? _logger;
         private IntPtr _hwnd;
         private bool _isVisible;
         private bool _isDarkTheme;
 
         public event Action<string>? FolderSelected;
 
-        public OverlayWindow(IntPtr ownerHwnd)
+        public OverlayWindow(IntPtr ownerHwnd, EasyAccess.Infra.Logger? logger = null)
         {
             _ownerHwnd = ownerHwnd;
+            _logger = logger;
 
             _listView = new ListView
             {
@@ -55,22 +58,31 @@ namespace EasyAccess.UI
                 Child = _listView,
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
-                Margin = new Thickness(16, 0, 16, 8)
+                Margin = new Thickness(0)
             };
 
-            Content = _border;
+            // 设置根 Grid 背景与 Border 一致，避免圆角后露出黑色
+            _root = new Grid
+            {
+                Children = { _border }
+            };
+            Content = _root;
 
             _isDarkTheme = IsSystemDarkTheme();
             ApplyTheme();
 
-            var presenter = GetAppWindow().Presenter as OverlappedPresenter;
+            var appWindow = GetAppWindow();
+            var presenter = appWindow.Presenter as OverlappedPresenter;
             if (presenter != null)
             {
                 presenter.SetBorderAndTitleBar(false, false);
                 presenter.IsAlwaysOnTop = true;
             }
 
-            AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
+            // 完全隐藏标题栏
+            appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
+            appWindow.TitleBar.ButtonBackgroundColor = global::Windows.UI.Color.FromArgb(0, 0, 0, 0);
+            appWindow.TitleBar.ButtonInactiveBackgroundColor = global::Windows.UI.Color.FromArgb(0, 0, 0, 0);
 
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(null);
@@ -100,17 +112,41 @@ namespace EasyAccess.UI
             }
         }
 
+        // 透明色键 (品红色)
+        private const uint TRANSPARENT_COLOR_KEY = 0x00FF00FF;
+
         private void OnActivated(object sender, WindowActivatedEventArgs args)
         {
             if (_hwnd == IntPtr.Zero)
             {
                 _hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+                _logger?.Debug($"[Overlay] OnActivated: hwnd={_hwnd}");
+
+                // 移除窗口标题栏
+                var style = NativeMethods.GetWindowLongPtrW(_hwnd, NativeMethods.GWL_STYLE);
+                _logger?.Debug($"[Overlay] Original style=0x{style.ToInt64():X8}");
+                NativeMethods.SetWindowLongPtrW(_hwnd, NativeMethods.GWL_STYLE,
+                    new IntPtr(style.ToInt64() & ~(NativeMethods.WS_CAPTION | NativeMethods.WS_THICKFRAME)));
 
                 var exStyle = NativeMethods.GetWindowLongPtrW(_hwnd, NativeMethods.GWL_EXSTYLE);
+                _logger?.Debug($"[Overlay] Original exStyle=0x{exStyle.ToInt64():X8}");
+
                 NativeMethods.SetWindowLongPtrW(_hwnd, NativeMethods.GWL_EXSTYLE,
-                    new IntPtr(exStyle.ToInt64() | NativeMethods.WS_EX_NOACTIVATE | NativeMethods.WS_EX_TOOLWINDOW));
+                    new IntPtr(exStyle.ToInt64() | NativeMethods.WS_EX_NOACTIVATE | NativeMethods.WS_EX_TOOLWINDOW | NativeMethods.WS_EX_LAYERED));
+
+                var newExStyle = NativeMethods.GetWindowLongPtrW(_hwnd, NativeMethods.GWL_EXSTYLE);
+                _logger?.Debug($"[Overlay] New exStyle=0x{newExStyle.ToInt64():X8}");
 
                 NativeMethods.SetWindowLongPtrW(_hwnd, NativeMethods.GWL_HWNDPARENT, _ownerHwnd);
+
+                // 使用 color key 实现透明背景 (品红色区域会变透明)
+                var result1 = NativeMethods.SetLayeredWindowAttributes(_hwnd, TRANSPARENT_COLOR_KEY, 255, NativeMethods.LWA_COLORKEY);
+                _logger?.Debug($"[Overlay] SetLayeredWindowAttributes(LWA_COLORKEY) result={result1}");
+
+                // 扩展窗口框架到客户区，移除边框
+                var margins = new NativeMethods.MARGINS { leftWidth = -1, rightWidth = -1, topHeight = -1, bottomHeight = -1 };
+                var result2 = NativeMethods.DwmExtendFrameIntoClientArea(_hwnd, ref margins);
+                _logger?.Debug($"[Overlay] DwmExtendFrameIntoClientArea result={result2}");
             }
 
             var isDark = IsSystemDarkTheme();
@@ -142,16 +178,37 @@ namespace EasyAccess.UI
         {
             if (_isDarkTheme)
             {
-                _border.Background = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 45, G = 45, B = 45 });
+                var darkBg = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 45, G = 45, B = 45 });
+                _root.Background = darkBg;
+                _border.Background = darkBg;
                 _border.BorderBrush = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 64, G = 64, B = 64 });
-                _listView.Background = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 45, G = 45, B = 45 });
+                _listView.Background = darkBg;
                 _listView.Foreground = new SolidColorBrush(Colors.White);
             }
             else
             {
-                _border.Background = new SolidColorBrush(Colors.White);
+                var lightBg = new SolidColorBrush(Colors.White);
+                _root.Background = lightBg;
+                _border.Background = lightBg;
                 _border.BorderBrush = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 224, G = 224, B = 224 });
-                _listView.Background = new SolidColorBrush(Colors.White);
+                _listView.Background = lightBg;
+                _listView.Foreground = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 26, G = 26, B = 26 });
+            }
+
+            if (_isDarkTheme)
+            {
+                var darkBg = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 45, G = 45, B = 45 });
+                _border.Background = darkBg;
+                _border.BorderBrush = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 64, G = 64, B = 64 });
+                _listView.Background = darkBg;
+                _listView.Foreground = new SolidColorBrush(Colors.White);
+            }
+            else
+            {
+                var lightBg = new SolidColorBrush(Colors.White);
+                _border.Background = lightBg;
+                _border.BorderBrush = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 224, G = 224, B = 224 });
+                _listView.Background = lightBg;
                 _listView.Foreground = new SolidColorBrush(new global::Windows.UI.Color { A = 255, R = 26, G = 26, B = 26 });
             }
         }
@@ -201,20 +258,34 @@ namespace EasyAccess.UI
             var dpi = NativeMethods.GetDpiForWindow(dialogHwnd);
             var scale = dpi / 96.0;
 
-            var marginX = (int)(16 * scale);
+            var padding = (int)(16 * scale);
             var gap = (int)(4 * scale);
             var itemHeight = (int)(60 * scale);
 
-            var overlayWidth = dialogRect.Width - (marginX * 2);
+            var overlayWidth = dialogRect.Width - (padding * 2);
             var overlayHeight = _items.Count <= 3
                 ? (int)(_items.Count * itemHeight + 16 * scale)
                 : (int)(320 * scale);
-            var x = dialogRect.Left + marginX;
+            var x = dialogRect.Left + padding;
             var y = dialogRect.Bottom + gap;
 
             var windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            _logger?.Debug($"[Overlay] PositionWindow: pos=({x},{y}), size=({overlayWidth},{overlayHeight}), scale={scale}");
+
             NativeMethods.SetWindowPos(windowHandle, IntPtr.Zero, x, y, overlayWidth, overlayHeight,
-                NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
+                NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW | NativeMethods.SWP_FRAMECHANGED);
+
+            // 裁剪窗口为圆角矩形，圆角半径与 Border 一致
+            var cornerRadius = (int)(8 * scale);
+            _logger?.Debug($"[Overlay] CreateRoundRectRgn: size=({overlayWidth},{overlayHeight}), radius={cornerRadius}");
+            var rgn = NativeMethods.CreateRoundRectRgn(0, 0, overlayWidth, overlayHeight, cornerRadius * 2, cornerRadius * 2);
+            _logger?.Debug($"[Overlay] CreateRoundRectRgn result={rgn}");
+
+            if (rgn != IntPtr.Zero)
+            {
+                var rgnResult = NativeMethods.SetWindowRgn(windowHandle, rgn, true);
+                _logger?.Debug($"[Overlay] SetWindowRgn result={rgnResult}");
+            }
         }
 
         private static string TruncatePath(string path)

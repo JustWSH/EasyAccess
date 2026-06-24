@@ -62,7 +62,7 @@ namespace EasyAccess
             _folderCollector = new FolderCollector(_logger);
             _navigator = new Navigator(_logger);
 
-            _overlay = new OverlayWindow(hwnd);
+            _overlay = new OverlayWindow(hwnd, _logger);
             _overlay.FolderSelected += OnFolderSelected;
 
             _trayIcon = new TrayIcon(_window, _configManager.Config, () => _configManager.Save());

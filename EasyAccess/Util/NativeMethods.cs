@@ -12,9 +12,16 @@ namespace EasyAccess.Util
         public const int GWL_HWNDPARENT = -8;
         public const int GWL_WNDPROC = -4;
 
+        public const int WS_CAPTION = 0x00C00000;
+        public const int WS_THICKFRAME = 0x00040000;
+
         public const int WS_EX_TOOLWINDOW = 0x00000080;
         public const int WS_EX_NOACTIVATE = 0x08000000;
         public const int WS_EX_TOPMOST = 0x00000008;
+        public const int WS_EX_LAYERED = 0x00080000;
+
+        public const int LWA_ALPHA = 0x00000002;
+        public const int LWA_COLORKEY = 0x00000001;
 
         public const uint EVENT_OBJECT_CREATE = 0x8000;
         public const uint EVENT_OBJECT_DESTROY = 0x8001;
@@ -37,6 +44,7 @@ namespace EasyAccess.Util
         public const int SWP_NOMOVE = 0x0002;
         public const int SWP_NOACTIVATE = 0x0010;
         public const int SWP_SHOWWINDOW = 0x0040;
+        public const int SWP_FRAMECHANGED = 0x0020;
 
         public const int SW_HIDE = 0;
         public const int SW_SHOW = 5;
@@ -142,6 +150,27 @@ namespace EasyAccess.Util
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool SetProcessDpiAwarenessContext(int value);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        public static extern IntPtr CreateRoundRectRgn(int nLeftRect, int nTopRect, int nRightRect, int nBottomRect, int nWidthEllipse, int nHeightEllipse);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern int SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool bRedraw);
+
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref MARGINS pMarInset);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MARGINS
+        {
+            public int leftWidth;
+            public int rightWidth;
+            public int topHeight;
+            public int bottomHeight;
+        }
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
