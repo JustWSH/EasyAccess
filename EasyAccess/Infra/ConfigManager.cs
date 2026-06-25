@@ -7,7 +7,7 @@ namespace EasyAccess.Infra
     public sealed class AppConfig
     {
         public bool ShowOverlayOnDetect { get; set; } = true;
-        public int MaxOverlayItems { get; set; } = 10;
+        public int MaxOverlayItems { get; set; } = 3;
         public string OverlayPosition { get; set; } = "bottom";
         public string Theme { get; set; } = "system";
         public string LogLevel { get; set; } = "info";

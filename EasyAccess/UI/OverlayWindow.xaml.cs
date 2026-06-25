@@ -32,6 +32,7 @@ namespace EasyAccess.UI
         private IntPtr _hwnd;
         private bool _isVisible;
         private bool _isDarkTheme;
+        private int _maxVisibleItems = 5;
 
         public event Action<string>? FolderSelected;
 
@@ -226,6 +227,28 @@ namespace EasyAccess.UI
                     DisplayPath = TruncatePath(folder.Path)
                 });
             }
+
+            UpdateMaxHeight();
+        }
+
+        internal void UpdateMaxVisibleItems(int maxItems)
+        {
+            _maxVisibleItems = maxItems;
+            UpdateMaxHeight();
+        }
+
+        private void UpdateMaxHeight()
+        {
+            // 使用固定的高度计算，避免布局问题
+            var dpi = _hwnd != IntPtr.Zero ? NativeMethods.GetDpiForWindow(_hwnd) : 96;
+            var scale = dpi / 96.0;
+
+            // 每个文件夹项的高度：StackPanel Padding(8+8) + TextBlock1(14*1.4) + Spacing(2) + TextBlock2(12*1.4) = 56.4
+            var itemHeight = 56.4 * scale;
+            var listViewPadding = 4 * scale;
+
+            var maxHeight = _maxVisibleItems * itemHeight + listViewPadding * 2;
+            _listView.MaxHeight = maxHeight;
         }
 
         public void ShowOverlay(IntPtr dialogHwnd)
@@ -260,12 +283,18 @@ namespace EasyAccess.UI
 
             var padding = (int)(16 * scale);
             var gap = (int)(4 * scale);
-            var itemHeight = (int)(60 * scale);
 
             var overlayWidth = dialogRect.Width - (padding * 2);
-            var overlayHeight = _items.Count <= 3
-                ? (int)(_items.Count * itemHeight + 16 * scale)
-                : (int)(320 * scale);
+
+            // 使用固定的高度计算
+            var itemHeight = (int)(56.4 * scale);
+            var listViewPadding = (int)(4 * scale);
+
+            var visibleCount = global::System.Math.Min(_items.Count, _maxVisibleItems);
+            var overlayHeight = visibleCount * itemHeight + listViewPadding * 2;
+
+            _logger?.Debug($"[Overlay] PositionWindow: items={_items.Count}, maxVisible={_maxVisibleItems}, visible={visibleCount}, height={overlayHeight}");
+
             var x = dialogRect.Left + padding;
             var y = dialogRect.Bottom + gap;
 

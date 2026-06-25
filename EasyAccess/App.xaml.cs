@@ -64,8 +64,13 @@ namespace EasyAccess
 
             _overlay = new OverlayWindow(hwnd, _logger);
             _overlay.FolderSelected += OnFolderSelected;
+            _overlay.UpdateMaxVisibleItems(_configManager.Config.MaxOverlayItems);
 
-            _trayIcon = new TrayIcon(_window, _configManager.Config, () => _configManager.Save());
+            _trayIcon = new TrayIcon(_window, _configManager.Config, () =>
+            {
+                _configManager.Save();
+                _overlay?.UpdateMaxVisibleItems(_configManager.Config.MaxOverlayItems);
+            });
             _trayIcon.ExitRequested += OnExitRequested;
 
             _winEventHook = new WinEventHook(_logger);

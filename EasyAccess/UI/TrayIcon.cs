@@ -101,13 +101,14 @@ namespace EasyAccess.UI
             AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "error" ? MF_CHECKED : 0), ID_LOG_ERROR, "Error");
             AppendMenu(menu, MF_POPUP, (int)logMenu, "日志级别(&L)");
 
-            // Max items submenu
+            // Max visible items submenu
             var itemsMenu = CreatePopupMenu();
+            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 1 ? MF_CHECKED : 0), ID_ITEMS_1, "1");
+            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 2 ? MF_CHECKED : 0), ID_ITEMS_2, "2");
+            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 3 ? MF_CHECKED : 0), ID_ITEMS_3, "3");
+            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 4 ? MF_CHECKED : 0), ID_ITEMS_4, "4");
             AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 5 ? MF_CHECKED : 0), ID_ITEMS_5, "5");
-            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 10 ? MF_CHECKED : 0), ID_ITEMS_10, "10");
-            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 15 ? MF_CHECKED : 0), ID_ITEMS_15, "15");
-            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 20 ? MF_CHECKED : 0), ID_ITEMS_20, "20");
-            AppendMenu(menu, MF_POPUP, (int)itemsMenu, "最大项目数(&M)");
+            AppendMenu(menu, MF_POPUP, (int)itemsMenu, "最大显示的项目(&M)");
 
             AppendMenu(menu, MF_SEPARATOR, 0, "");
             AppendMenu(menu, MF_STRING, ID_EXIT, "退出(&X)");
@@ -142,20 +143,24 @@ namespace EasyAccess.UI
                     _config.LogLevel = "error";
                     _saveConfig();
                     break;
+                case ID_ITEMS_1:
+                    _config.MaxOverlayItems = 1;
+                    _saveConfig();
+                    break;
+                case ID_ITEMS_2:
+                    _config.MaxOverlayItems = 2;
+                    _saveConfig();
+                    break;
+                case ID_ITEMS_3:
+                    _config.MaxOverlayItems = 3;
+                    _saveConfig();
+                    break;
+                case ID_ITEMS_4:
+                    _config.MaxOverlayItems = 4;
+                    _saveConfig();
+                    break;
                 case ID_ITEMS_5:
                     _config.MaxOverlayItems = 5;
-                    _saveConfig();
-                    break;
-                case ID_ITEMS_10:
-                    _config.MaxOverlayItems = 10;
-                    _saveConfig();
-                    break;
-                case ID_ITEMS_15:
-                    _config.MaxOverlayItems = 15;
-                    _saveConfig();
-                    break;
-                case ID_ITEMS_20:
-                    _config.MaxOverlayItems = 20;
                     _saveConfig();
                     break;
                 case ID_EXIT:
@@ -203,10 +208,11 @@ namespace EasyAccess.UI
         private const int ID_LOG_INFO = 1011;
         private const int ID_LOG_WARN = 1012;
         private const int ID_LOG_ERROR = 1013;
-        private const int ID_ITEMS_5 = 1020;
-        private const int ID_ITEMS_10 = 1021;
-        private const int ID_ITEMS_15 = 1022;
-        private const int ID_ITEMS_20 = 1023;
+        private const int ID_ITEMS_1 = 1020;
+        private const int ID_ITEMS_2 = 1021;
+        private const int ID_ITEMS_3 = 1022;
+        private const int ID_ITEMS_4 = 1023;
+        private const int ID_ITEMS_5 = 1024;
         private const int ID_EXIT = 1099;
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
