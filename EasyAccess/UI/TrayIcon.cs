@@ -88,9 +88,13 @@ namespace EasyAccess.UI
         {
             var menu = CreatePopupMenu();
 
+            // Version info
+            AppendMenu(menu, MF_STRING | MF_DISABLED, 0, "EasyAccess v1.0");
+            AppendMenu(menu, MF_SEPARATOR, 0, "");
+
             // Show Overlay toggle
             AppendMenu(menu, MF_STRING | (_config.ShowOverlayOnDetect ? MF_CHECKED : 0),
-                ID_TOGGLE_OVERLAY, "显示 Overlay(&O)");
+                ID_TOGGLE_OVERLAY, "显示 Overlay | Show Overlay(&O)");
             AppendMenu(menu, MF_SEPARATOR, 0, "");
 
             // Log level submenu
@@ -99,7 +103,7 @@ namespace EasyAccess.UI
             AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "info" ? MF_CHECKED : 0), ID_LOG_INFO, "Info");
             AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "warn" ? MF_CHECKED : 0), ID_LOG_WARN, "Warn");
             AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "error" ? MF_CHECKED : 0), ID_LOG_ERROR, "Error");
-            AppendMenu(menu, MF_POPUP, (int)logMenu, "日志级别(&L)");
+            AppendMenu(menu, MF_POPUP, (int)logMenu, "日志级别 | Log Level(&L)");
 
             // Max visible items submenu
             var itemsMenu = CreatePopupMenu();
@@ -108,10 +112,10 @@ namespace EasyAccess.UI
             AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 3 ? MF_CHECKED : 0), ID_ITEMS_3, "3");
             AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 4 ? MF_CHECKED : 0), ID_ITEMS_4, "4");
             AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 5 ? MF_CHECKED : 0), ID_ITEMS_5, "5");
-            AppendMenu(menu, MF_POPUP, (int)itemsMenu, "最大显示的项目(&M)");
+            AppendMenu(menu, MF_POPUP, (int)itemsMenu, "最大显示项目 | Max Items(&M)");
 
             AppendMenu(menu, MF_SEPARATOR, 0, "");
-            AppendMenu(menu, MF_STRING, ID_EXIT, "退出(&X)");
+            AppendMenu(menu, MF_STRING, ID_EXIT, "退出 | Exit(&X)");
 
             GetCursorPos(out var point);
             SetForegroundWindow(_hwnd);
@@ -198,6 +202,7 @@ namespace EasyAccess.UI
         private const int NIM_DELETE = 0x00000002;
         private const int MF_STRING = 0x00000000;
         private const int MF_CHECKED = 0x00000008;
+        private const int MF_DISABLED = 0x00000002;
         private const int MF_SEPARATOR = 0x00000800;
         private const int MF_POPUP = 0x00000010;
         private const int TPM_RIGHTBUTTON = 0x0002;
