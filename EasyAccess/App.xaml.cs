@@ -26,6 +26,8 @@ namespace EasyAccess
         private TrayIcon? _trayIcon;
         private IntPtr _currentDialogHwnd;
         private bool _initialized;
+        private bool _isNavigating;
+        private bool _justNavigated;
 
         public App()
         {
@@ -172,8 +174,20 @@ namespace EasyAccess
 
             _logger?.Debug($"OnForegroundChanged: hwnd={hwnd}, currentDialogHwnd={_currentDialogHwnd}");
 
+            if (_isNavigating)
+            {
+                _logger?.Debug("Skipping foreground change during navigation");
+                return;
+            }
+
             if (_dialogDetector!.IsFileDialog(hwnd))
             {
+                if (_justNavigated)
+                {
+                    _logger?.Debug("Skipping overlay refresh right after navigation");
+                    _currentDialogHwnd = hwnd;
+                    return;
+                }
                 _logger.Info($"File dialog brought to foreground: {hwnd}");
                 _currentDialogHwnd = hwnd;
                 await ShowOverlayForDialog(hwnd);
@@ -220,10 +234,20 @@ namespace EasyAccess
 
             _logger.Info($"User selected folder: {path}");
 
-            var success = await _navigator!.NavigateToAsync(_currentDialogHwnd, path);
-            if (!success)
+            _isNavigating = true;
+            try
             {
-                _logger.Warn("Navigation failed");
+                var success = await _navigator!.NavigateToAsync(_currentDialogHwnd, path);
+                if (!success)
+                {
+                    _logger.Warn("Navigation failed");
+                }
+            }
+            finally
+            {
+                _isNavigating = false;
+                _justNavigated = true;
+                _ = Task.Delay(1000).ContinueWith(_ => _justNavigated = false);
             }
         }
 
