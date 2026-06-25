@@ -207,6 +207,9 @@ namespace EasyAccess
 
             if (hwnd == _currentDialogHwnd)
             {
+                if (!_configManager!.Config.ShowOverlayOnDetect)
+                    return;
+
                 _logger?.Debug($"Dialog location changed: {hwnd}, updating overlay position");
                 _overlay?.ShowOverlay(hwnd);
             }
@@ -214,6 +217,12 @@ namespace EasyAccess
 
         private async Task ShowOverlayForDialog(IntPtr dialogHwnd)
         {
+            if (!_configManager!.Config.ShowOverlayOnDetect)
+            {
+                _overlay?.HideOverlay();
+                return;
+            }
+
             var folders = await _folderCollector!.GetOpenFoldersAsync();
             if (folders.Count > 0)
             {
