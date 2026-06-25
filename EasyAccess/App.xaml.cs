@@ -77,6 +77,7 @@ namespace EasyAccess
             _winEventHook.DialogCreated += OnDialogCreated;
             _winEventHook.DialogDestroyed += OnDialogDestroyed;
             _winEventHook.ForegroundChanged += OnForegroundChanged;
+            _winEventHook.LocationChanged += OnLocationChanged;
 
             if (!_winEventHook.Install())
             {
@@ -169,14 +170,31 @@ namespace EasyAccess
             if (!_initialized)
                 return;
 
+            _logger?.Debug($"OnForegroundChanged: hwnd={hwnd}, currentDialogHwnd={_currentDialogHwnd}");
+
             if (_dialogDetector!.IsFileDialog(hwnd))
             {
                 _logger.Info($"File dialog brought to foreground: {hwnd}");
                 _currentDialogHwnd = hwnd;
                 await ShowOverlayForDialog(hwnd);
             }
-            else if (hwnd != _currentDialogHwnd && _currentDialogHwnd != IntPtr.Zero)
+            else if (_currentDialogHwnd != IntPtr.Zero)
             {
+                // Non-dialog window got foreground, hide overlay
+                _logger?.Info($"Non-dialog window {hwnd} got foreground, hiding overlay");
+                _overlay?.HideOverlay();
+            }
+        }
+
+        private void OnLocationChanged(IntPtr hwnd)
+        {
+            if (!_initialized || _currentDialogHwnd == IntPtr.Zero)
+                return;
+
+            if (hwnd == _currentDialogHwnd)
+            {
+                _logger?.Debug($"Dialog location changed: {hwnd}, updating overlay position");
+                _overlay?.ShowOverlay(hwnd);
             }
         }
 

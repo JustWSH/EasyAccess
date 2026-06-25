@@ -55,6 +55,14 @@ namespace EasyAccess.System
                 0, 0,
                 NativeMethods.WINEVENT_OUTOFCONTEXT | NativeMethods.WINEVENT_SKIPOWNPROCESS);
 
+            NativeMethods.SetWinEventHook(
+                NativeMethods.EVENT_OBJECT_LOCATIONCHANGE,
+                NativeMethods.EVENT_OBJECT_LOCATIONCHANGE,
+                moduleHandle,
+                _delegate,
+                0, 0,
+                NativeMethods.WINEVENT_OUTOFCONTEXT | NativeMethods.WINEVENT_SKIPOWNPROCESS);
+
             _logger?.Info("WinEventHook installed successfully");
             return true;
         }
