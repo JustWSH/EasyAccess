@@ -71,10 +71,10 @@ namespace EasyAccess.UI
 
         private void LoadIcon()
         {
-            var iconPath = Path.Combine(AppContext.BaseDirectory, "tray_icon.ico");
+            var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "ico.ico");
             if (File.Exists(iconPath))
             {
-                _hIcon = LoadIconFromFile(iconPath);
+                _hIcon = LoadImage(IntPtr.Zero, iconPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
             }
             else
             {
@@ -202,6 +202,8 @@ namespace EasyAccess.UI
         private const int MF_POPUP = 0x00000010;
         private const int TPM_RIGHTBUTTON = 0x0002;
         private const int IDI_APPLICATION = 32512;
+        private const uint IMAGE_ICON = 1;
+        private const uint LR_LOADFROMFILE = 0x00000010;
 
         private const int ID_TOGGLE_OVERLAY = 1001;
         private const int ID_LOG_DEBUG = 1010;
@@ -241,8 +243,8 @@ namespace EasyAccess.UI
         [DllImport("user32.dll")]
         private static extern IntPtr LoadIcon(IntPtr hInstance, int lpIconName);
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern IntPtr LoadIconFromFile(string lpFileName);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern IntPtr LoadImage(IntPtr hInst, string name, uint type, int cx, int cy, uint fuLoad);
 
         [DllImport("user32.dll")]
         private static extern bool DestroyIcon(IntPtr hIcon);

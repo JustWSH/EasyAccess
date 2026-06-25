@@ -11,6 +11,7 @@
     <WinUISDKReferences>false</WinUISDKReferences>
     <Nullable>enable</Nullable>
     <WindowsPackageType>None</WindowsPackageType>
+    <ApplicationIcon>Assets\ico.ico</ApplicationIcon>
     <SelfContained Condition="'$(Configuration)' == 'Release'">true</SelfContained>
     <WindowsAppSDKSelfContained Condition="'$(Configuration)' == 'Release'">true</WindowsAppSDKSelfContained>
   </PropertyGroup>
