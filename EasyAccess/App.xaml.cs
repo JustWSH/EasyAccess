@@ -48,11 +48,12 @@ namespace EasyAccess
             var configDir = ConfigManager.GetDefaultConfigDirectory();
             var logDir = System.IO.Path.Combine(configDir, "logs");
 
-            _logger = new Logger(logDir, LogLevel.Debug);
-            _logger.Info($"Log directory: {logDir}");
-            _logger.Info($"Config directory: {configDir}");
             _configManager = new ConfigManager(configDir);
             _configManager.Load();
+
+            _logger = new Logger(logDir, Logger.ParseLevel(_configManager.Config.LogLevel));
+            _logger.Info($"Log directory: {logDir}");
+            _logger.Info($"Config directory: {configDir}");
 
             _logger.Info("EasyAccess starting...");
 
@@ -73,6 +74,7 @@ namespace EasyAccess
             {
                 _configManager.Save();
                 _overlay?.UpdateMaxVisibleItems(_configManager.Config.MaxOverlayItems);
+                _logger?.SetMinLevel(Logger.ParseLevel(_configManager.Config.LogLevel));
             });
             _trayIcon.ExitRequested += OnExitRequested;
 

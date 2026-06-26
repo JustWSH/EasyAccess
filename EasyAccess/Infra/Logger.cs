@@ -15,7 +15,7 @@ namespace EasyAccess.Infra
     internal sealed class Logger : IDisposable
     {
         private readonly string _logDirectory;
-        private readonly LogLevel _minLevel;
+        private LogLevel _minLevel;
         private readonly object _lock = new();
         private StreamWriter? _writer;
         private string? _currentLogFile;
@@ -27,6 +27,23 @@ namespace EasyAccess.Infra
             _minLevel = minLevel;
             Directory.CreateDirectory(_logDirectory);
             RotateIfNeeded();
+        }
+
+        public void SetMinLevel(LogLevel level)
+        {
+            _minLevel = level;
+        }
+
+        public static LogLevel ParseLevel(string level)
+        {
+            return level?.ToLower() switch
+            {
+                "debug" => LogLevel.Debug,
+                "info" => LogLevel.Info,
+                "warn" => LogLevel.Warn,
+                "error" => LogLevel.Error,
+                _ => LogLevel.Info
+            };
         }
 
         public void Debug(string message) => Log(LogLevel.Debug, message);
