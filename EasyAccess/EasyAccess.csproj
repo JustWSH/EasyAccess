@@ -16,6 +16,15 @@
     <WindowsAppSDKSelfContained Condition="'$(Configuration)' == 'Release'">true</WindowsAppSDKSelfContained>
   </PropertyGroup>
 
+  <!-- Ensure .pri file and Assets are published for WinUI 3 -->
+  <Target Name="CopyPublishAssets" AfterTargets="Publish">
+    <Copy SourceFiles="$(OutputPath)$(TargetName).pri" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_AssetFiles Include="$(OutputPath)Assets\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_AssetFiles)" DestinationFiles="@(_AssetFiles->'$(PublishDir)Assets\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
@@ -24,12 +33,4 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
   </ItemGroup>
-
-    <!-- Publish Properties -->
-  <PropertyGroup>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
-  </PropertyGroup>
 </Project>
