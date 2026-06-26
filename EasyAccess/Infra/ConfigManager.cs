@@ -10,6 +10,7 @@ namespace EasyAccess.Infra
         public int MaxOverlayItems { get; set; } = 3;
         public string Theme { get; set; } = "system";
         public string LogLevel { get; set; } = "info";
+        public string Language { get; set; } = "zh";
     }
 
     internal sealed class ConfigManager

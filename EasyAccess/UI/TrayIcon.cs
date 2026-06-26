@@ -84,6 +84,10 @@ namespace EasyAccess.UI
             _notifyIconData.hIcon = _hIcon;
         }
 
+        private bool IsChinese => _config.Language == "zh";
+
+        private string T(string zh, string en) => IsChinese ? zh : en;
+
         private void ShowContextMenu()
         {
             var menu = NativeMethods.CreatePopupMenu();
@@ -92,7 +96,7 @@ namespace EasyAccess.UI
             NativeMethods.AppendMenu(menu, NativeMethods.MF_SEPARATOR, 0, "");
 
             NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING | (_config.ShowOverlayOnDetect ? NativeMethods.MF_CHECKED : 0),
-                ID_TOGGLE_OVERLAY, "显示 Overlay | Show Overlay(&O)");
+                ID_TOGGLE_OVERLAY, T("显示 Overlay", "Show Overlay") + "(&O)");
             NativeMethods.AppendMenu(menu, NativeMethods.MF_SEPARATOR, 0, "");
 
             var logMenu = NativeMethods.CreatePopupMenu();
@@ -100,7 +104,7 @@ namespace EasyAccess.UI
             NativeMethods.AppendMenu(logMenu, NativeMethods.MF_STRING | (_config.LogLevel == "info" ? NativeMethods.MF_CHECKED : 0), ID_LOG_INFO, "Info");
             NativeMethods.AppendMenu(logMenu, NativeMethods.MF_STRING | (_config.LogLevel == "warn" ? NativeMethods.MF_CHECKED : 0), ID_LOG_WARN, "Warn");
             NativeMethods.AppendMenu(logMenu, NativeMethods.MF_STRING | (_config.LogLevel == "error" ? NativeMethods.MF_CHECKED : 0), ID_LOG_ERROR, "Error");
-            NativeMethods.AppendMenu(menu, NativeMethods.MF_POPUP, (int)logMenu, "日志级别 | Log Level(&L)");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_POPUP, (int)logMenu, T("日志级别", "Log Level") + "(&L)");
 
             var itemsMenu = NativeMethods.CreatePopupMenu();
             NativeMethods.AppendMenu(itemsMenu, NativeMethods.MF_STRING | (_config.MaxOverlayItems == 1 ? NativeMethods.MF_CHECKED : 0), ID_ITEMS_1, "1");
@@ -108,10 +112,15 @@ namespace EasyAccess.UI
             NativeMethods.AppendMenu(itemsMenu, NativeMethods.MF_STRING | (_config.MaxOverlayItems == 3 ? NativeMethods.MF_CHECKED : 0), ID_ITEMS_3, "3");
             NativeMethods.AppendMenu(itemsMenu, NativeMethods.MF_STRING | (_config.MaxOverlayItems == 4 ? NativeMethods.MF_CHECKED : 0), ID_ITEMS_4, "4");
             NativeMethods.AppendMenu(itemsMenu, NativeMethods.MF_STRING | (_config.MaxOverlayItems == 5 ? NativeMethods.MF_CHECKED : 0), ID_ITEMS_5, "5");
-            NativeMethods.AppendMenu(menu, NativeMethods.MF_POPUP, (int)itemsMenu, "最大显示项目 | Max Items(&M)");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_POPUP, (int)itemsMenu, T("最大显示项目", "Max Items") + "(&M)");
+
+            var langMenu = NativeMethods.CreatePopupMenu();
+            NativeMethods.AppendMenu(langMenu, NativeMethods.MF_STRING | (_config.Language == "zh" ? NativeMethods.MF_CHECKED : 0), ID_LANG_ZH, "中文");
+            NativeMethods.AppendMenu(langMenu, NativeMethods.MF_STRING | (_config.Language == "en" ? NativeMethods.MF_CHECKED : 0), ID_LANG_EN, "English");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_POPUP, (int)langMenu, T("语言", "Language") + "(&G)");
 
             NativeMethods.AppendMenu(menu, NativeMethods.MF_SEPARATOR, 0, "");
-            NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING, ID_EXIT, "退出 | Exit(&X)");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING, ID_EXIT, T("退出", "Exit") + "(&X)");
 
             NativeMethods.GetCursorPos(out var point);
             NativeMethods.SetForegroundWindow(_hwnd);
@@ -163,6 +172,14 @@ namespace EasyAccess.UI
                     _config.MaxOverlayItems = 5;
                     _saveConfig();
                     break;
+                case ID_LANG_ZH:
+                    _config.Language = "zh";
+                    _saveConfig();
+                    break;
+                case ID_LANG_EN:
+                    _config.Language = "en";
+                    _saveConfig();
+                    break;
                 case ID_EXIT:
                     ExitRequested?.Invoke();
                     break;
@@ -194,6 +211,8 @@ namespace EasyAccess.UI
         private const int ID_ITEMS_3 = 1022;
         private const int ID_ITEMS_4 = 1023;
         private const int ID_ITEMS_5 = 1024;
+        private const int ID_LANG_ZH = 1030;
+        private const int ID_LANG_EN = 1031;
         private const int ID_EXIT = 1099;
     }
 }
