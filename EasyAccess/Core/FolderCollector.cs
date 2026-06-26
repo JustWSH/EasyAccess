@@ -11,8 +11,6 @@ namespace EasyAccess.Core
         private readonly ShellWindowsInterop _shellWindows;
         private readonly Logger _logger;
         private List<ExplorerFolder>? _cachedFolders;
-        private DateTime _cacheTime;
-        private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(2);
 
         public FolderCollector(Logger logger)
         {
@@ -20,13 +18,15 @@ namespace EasyAccess.Core
             _shellWindows = new ShellWindowsInterop(logger);
         }
 
+        public bool HasCache => _cachedFolders != null;
+
         public Task<List<ExplorerFolder>> GetOpenFoldersAsync()
         {
             return Task.Run(() =>
             {
                 try
                 {
-                    if (_cachedFolders != null && DateTime.Now - _cacheTime < CacheDuration)
+                    if (_cachedFolders != null)
                     {
                         return new List<ExplorerFolder>(_cachedFolders);
                     }
@@ -35,7 +35,6 @@ namespace EasyAccess.Core
                     _logger.Info($"Found {folders.Count} open folders");
 
                     _cachedFolders = folders;
-                    _cacheTime = DateTime.Now;
 
                     return new List<ExplorerFolder>(folders);
                 }

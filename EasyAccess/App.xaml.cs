@@ -165,6 +165,7 @@ namespace EasyAccess
                 _logger.Info($"Dialog destroyed: {hwnd}, hiding overlay");
                 _currentDialogHwnd = IntPtr.Zero;
                 _overlay?.HideOverlay();
+                _folderCollector?.InvalidateCache();
             }
         }
 
@@ -219,7 +220,13 @@ namespace EasyAccess
                 return;
             }
 
-            var folders = await _folderCollector!.GetOpenFoldersAsync();
+            if (_folderCollector!.HasCache)
+            {
+                _overlay?.ShowOverlay(dialogHwnd);
+                return;
+            }
+
+            var folders = await _folderCollector.GetOpenFoldersAsync();
             if (folders.Count > 0)
             {
                 _overlay!.UpdateFolders(folders);

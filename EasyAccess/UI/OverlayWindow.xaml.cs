@@ -196,22 +196,6 @@ namespace EasyAccess.UI
 
         internal void UpdateFolders(List<ExplorerFolder> folders)
         {
-            // Smart update: skip if data hasn't changed to avoid UI flicker
-            if (_items.Count == folders.Count)
-            {
-                bool same = true;
-                for (int i = 0; i < folders.Count; i++)
-                {
-                    if (_items[i].Path != folders[i].Path)
-                    {
-                        same = false;
-                        break;
-                    }
-                }
-                if (same)
-                    return;
-            }
-
             _items.Clear();
 
             foreach (var folder in folders)
