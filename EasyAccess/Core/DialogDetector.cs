@@ -1,5 +1,5 @@
-using global::System;
-using global::System.Text;
+using System;
+using System.Text;
 using EasyAccess.Infra;
 using EasyAccess.Util;
 
@@ -22,12 +22,9 @@ namespace EasyAccess.Core
                 return false;
 
             var className = GetClassName(hwnd);
-            _logger.Debug($"Checking window {hwnd}, class: {className}");
-
             if (className != StandardDialogClass)
                 return false;
 
-            _logger.Debug($"Found #32770 dialog, checking controls...");
             var result = HasFileDialogControls(hwnd);
             _logger.Debug($"IsFileDialog result: {result}");
             return result;
@@ -66,111 +63,7 @@ namespace EasyAccess.Core
             if (hasComboBox) matchCount++;
             if (hasButton) matchCount++;
 
-            _logger.Debug($"Dialog {hwnd}: Edit={hasEdit}, ComboBox={hasComboBox}, Button={hasButton}");
-
             return matchCount >= 2;
-        }
-
-        public string? GetDialogFilePath(IntPtr hwnd)
-        {
-            var editHwnd = NativeMethods.FindWindowExW(hwnd, IntPtr.Zero, "Edit", null);
-            if (editHwnd == IntPtr.Zero)
-                return null;
-
-            return GetWindowText(editHwnd);
-        }
-
-        public bool ClickButton(IntPtr hwnd, string buttonText)
-        {
-            IntPtr buttonHwnd = IntPtr.Zero;
-
-            NativeMethods.EnumChildWindows(hwnd, (childHwnd, _) =>
-            {
-                var className = GetClassName(childHwnd);
-                if (className == "Button")
-                {
-                    var text = GetWindowText(childHwnd);
-                    if (text.Contains(buttonText))
-                    {
-                        buttonHwnd = childHwnd;
-                        return false;
-                    }
-                }
-                return true;
-            }, IntPtr.Zero);
-
-            if (buttonHwnd == IntPtr.Zero)
-                return false;
-
-            NativeMethods.SendMessage(buttonHwnd, NativeMethods.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
-            return true;
-        }
-
-        public IntPtr GetAddressBarEdit(IntPtr hwnd)
-        {
-            var workerHwnd = IntPtr.Zero;
-            NativeMethods.EnumChildWindows(hwnd, (childHwnd, _) =>
-            {
-                var className = GetClassName(childHwnd);
-                if (className == "WorkerW")
-                {
-                    workerHwnd = childHwnd;
-                    return false;
-                }
-                return true;
-            }, IntPtr.Zero);
-
-            if (workerHwnd == IntPtr.Zero)
-                return IntPtr.Zero;
-
-            var rebarHwnd = NativeMethods.FindWindowExW(workerHwnd, IntPtr.Zero, "ReBarWindow32", null);
-            if (rebarHwnd == IntPtr.Zero)
-                return IntPtr.Zero;
-
-            var addressBandHwnd = IntPtr.Zero;
-            NativeMethods.EnumChildWindows(rebarHwnd, (childHwnd, _) =>
-            {
-                var className = GetClassName(childHwnd);
-                if (className == "Address Band Root")
-                {
-                    addressBandHwnd = childHwnd;
-                    return false;
-                }
-                return true;
-            }, IntPtr.Zero);
-
-            if (addressBandHwnd == IntPtr.Zero)
-                return IntPtr.Zero;
-
-            var progressHwnd = NativeMethods.FindWindowExW(addressBandHwnd, IntPtr.Zero, "msctls_progress32", null);
-            if (progressHwnd == IntPtr.Zero)
-                return IntPtr.Zero;
-
-            var breadcrumbParent = NativeMethods.FindWindowExW(progressHwnd, IntPtr.Zero, "Breadcrumb Parent", null);
-            if (breadcrumbParent != IntPtr.Zero)
-            {
-                var breadcrumbHwnd = NativeMethods.FindWindowExW(breadcrumbParent, IntPtr.Zero, null, null);
-                if (breadcrumbHwnd != IntPtr.Zero)
-                {
-                    var className = GetClassName(breadcrumbHwnd);
-                    if (className == "ToolbarWindow32")
-                        return breadcrumbHwnd;
-                }
-            }
-
-            var comboBoxExHwnd = NativeMethods.FindWindowExW(progressHwnd, IntPtr.Zero, "ComboBoxEx32", null);
-            if (comboBoxExHwnd != IntPtr.Zero)
-            {
-                var comboBoxHwnd = NativeMethods.FindWindowExW(comboBoxExHwnd, IntPtr.Zero, "ComboBox", null);
-                if (comboBoxHwnd != IntPtr.Zero)
-                {
-                    var editHwnd = NativeMethods.FindWindowExW(comboBoxHwnd, IntPtr.Zero, "Edit", null);
-                    if (editHwnd != IntPtr.Zero)
-                        return editHwnd;
-                }
-            }
-
-            return IntPtr.Zero;
         }
 
         private static string GetClassName(IntPtr hwnd)

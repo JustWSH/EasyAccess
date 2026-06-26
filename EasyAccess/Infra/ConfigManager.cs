@@ -1,6 +1,6 @@
-using global::System;
-using global::System.IO;
-using global::System.Text.Json;
+using System;
+using System.IO;
+using System.Text.Json;
 
 namespace EasyAccess.Infra
 {
@@ -8,10 +8,8 @@ namespace EasyAccess.Infra
     {
         public bool ShowOverlayOnDetect { get; set; } = true;
         public int MaxOverlayItems { get; set; } = 3;
-        public string OverlayPosition { get; set; } = "bottom";
         public string Theme { get; set; } = "system";
         public string LogLevel { get; set; } = "info";
-        public string WhitelistFile { get; set; } = "whitelist.json";
     }
 
     internal sealed class ConfigManager
@@ -45,7 +43,7 @@ namespace EasyAccess.Infra
             }
             catch (Exception ex)
             {
-                global::System.Diagnostics.Debug.WriteLine($"Failed to load config: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to load config: {ex.Message}");
                 _config = new AppConfig();
             }
         }
@@ -61,7 +59,7 @@ namespace EasyAccess.Infra
             }
             catch (Exception ex)
             {
-                global::System.Diagnostics.Debug.WriteLine($"Failed to save config: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to save config: {ex.Message}");
             }
         }
 

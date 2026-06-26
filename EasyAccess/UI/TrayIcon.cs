@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
-using global::System;
-using global::System.IO;
-using global::System.Runtime.InteropServices;
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
 using EasyAccess.Infra;
 using EasyAccess.Util;
 
@@ -13,7 +13,7 @@ namespace EasyAccess.UI
         private readonly IntPtr _hwnd;
         private readonly AppConfig _config;
         private readonly Action _saveConfig;
-        private NotifyIconData _notifyIconData;
+        private NativeMethods.NOTIFYICONDATA _notifyIconData;
         private bool _disposed;
         private IntPtr _hIcon;
 
@@ -26,18 +26,18 @@ namespace EasyAccess.UI
             _config = config;
             _saveConfig = saveConfig;
 
-            _notifyIconData = new NotifyIconData
+            _notifyIconData = new NativeMethods.NOTIFYICONDATA
             {
-                cbSize = Marshal.SizeOf<NotifyIconData>(),
+                cbSize = Marshal.SizeOf<NativeMethods.NOTIFYICONDATA>(),
                 hWnd = _hwnd,
                 uID = 1,
-                uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE,
-                uCallbackMessage = WM_TRAYICON,
+                uFlags = NativeMethods.NIF_ICON | NativeMethods.NIF_TIP | NativeMethods.NIF_MESSAGE,
+                uCallbackMessage = NativeMethods.WM_TRAYICON,
                 szTip = "EasyAccess"
             };
 
             LoadIcon();
-            Shell_NotifyIcon(NIM_ADD, ref _notifyIconData);
+            NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_ADD, ref _notifyIconData);
 
             SubclassWindow();
         }
@@ -52,15 +52,15 @@ namespace EasyAccess.UI
 
         private IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
-            if (msg == WM_TRAYICON)
+            if (msg == NativeMethods.WM_TRAYICON)
             {
                 int lParamInt = lParam.ToInt32();
-                if (lParamInt == WM_RBUTTONUP)
+                if (lParamInt == NativeMethods.WM_RBUTTONUP)
                 {
                     ShowContextMenu();
                 }
             }
-            else if (msg == WM_COMMAND)
+            else if (msg == NativeMethods.WM_COMMAND)
             {
                 int commandId = wParam.ToInt32() & 0xFFFF;
                 HandleCommand(commandId);
@@ -74,11 +74,11 @@ namespace EasyAccess.UI
             var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "ico.ico");
             if (File.Exists(iconPath))
             {
-                _hIcon = LoadImage(IntPtr.Zero, iconPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+                _hIcon = NativeMethods.LoadImage(IntPtr.Zero, iconPath, NativeMethods.IMAGE_ICON, 0, 0, NativeMethods.LR_LOADFROMFILE);
             }
             else
             {
-                _hIcon = LoadIcon(IntPtr.Zero, IDI_APPLICATION);
+                _hIcon = NativeMethods.LoadIcon(IntPtr.Zero, NativeMethods.IDI_APPLICATION);
             }
 
             _notifyIconData.hIcon = _hIcon;
@@ -86,41 +86,37 @@ namespace EasyAccess.UI
 
         private void ShowContextMenu()
         {
-            var menu = CreatePopupMenu();
+            var menu = NativeMethods.CreatePopupMenu();
 
-            // Version info
-            AppendMenu(menu, MF_STRING | MF_DISABLED, 0, "EasyAccess v1.0");
-            AppendMenu(menu, MF_SEPARATOR, 0, "");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING | NativeMethods.MF_DISABLED, 0, "EasyAccess v1.0");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_SEPARATOR, 0, "");
 
-            // Show Overlay toggle
-            AppendMenu(menu, MF_STRING | (_config.ShowOverlayOnDetect ? MF_CHECKED : 0),
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING | (_config.ShowOverlayOnDetect ? NativeMethods.MF_CHECKED : 0),
                 ID_TOGGLE_OVERLAY, "显示 Overlay | Show Overlay(&O)");
-            AppendMenu(menu, MF_SEPARATOR, 0, "");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_SEPARATOR, 0, "");
 
-            // Log level submenu
-            var logMenu = CreatePopupMenu();
-            AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "debug" ? MF_CHECKED : 0), ID_LOG_DEBUG, "Debug");
-            AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "info" ? MF_CHECKED : 0), ID_LOG_INFO, "Info");
-            AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "warn" ? MF_CHECKED : 0), ID_LOG_WARN, "Warn");
-            AppendMenu(logMenu, MF_STRING | (_config.LogLevel == "error" ? MF_CHECKED : 0), ID_LOG_ERROR, "Error");
-            AppendMenu(menu, MF_POPUP, (int)logMenu, "日志级别 | Log Level(&L)");
+            var logMenu = NativeMethods.CreatePopupMenu();
+            NativeMethods.AppendMenu(logMenu, NativeMethods.MF_STRING | (_config.LogLevel == "debug" ? NativeMethods.MF_CHECKED : 0), ID_LOG_DEBUG, "Debug");
+            NativeMethods.AppendMenu(logMenu, NativeMethods.MF_STRING | (_config.LogLevel == "info" ? NativeMethods.MF_CHECKED : 0), ID_LOG_INFO, "Info");
+            NativeMethods.AppendMenu(logMenu, NativeMethods.MF_STRING | (_config.LogLevel == "warn" ? NativeMethods.MF_CHECKED : 0), ID_LOG_WARN, "Warn");
+            NativeMethods.AppendMenu(logMenu, NativeMethods.MF_STRING | (_config.LogLevel == "error" ? NativeMethods.MF_CHECKED : 0), ID_LOG_ERROR, "Error");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_POPUP, (int)logMenu, "日志级别 | Log Level(&L)");
 
-            // Max visible items submenu
-            var itemsMenu = CreatePopupMenu();
-            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 1 ? MF_CHECKED : 0), ID_ITEMS_1, "1");
-            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 2 ? MF_CHECKED : 0), ID_ITEMS_2, "2");
-            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 3 ? MF_CHECKED : 0), ID_ITEMS_3, "3");
-            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 4 ? MF_CHECKED : 0), ID_ITEMS_4, "4");
-            AppendMenu(itemsMenu, MF_STRING | (_config.MaxOverlayItems == 5 ? MF_CHECKED : 0), ID_ITEMS_5, "5");
-            AppendMenu(menu, MF_POPUP, (int)itemsMenu, "最大显示项目 | Max Items(&M)");
+            var itemsMenu = NativeMethods.CreatePopupMenu();
+            NativeMethods.AppendMenu(itemsMenu, NativeMethods.MF_STRING | (_config.MaxOverlayItems == 1 ? NativeMethods.MF_CHECKED : 0), ID_ITEMS_1, "1");
+            NativeMethods.AppendMenu(itemsMenu, NativeMethods.MF_STRING | (_config.MaxOverlayItems == 2 ? NativeMethods.MF_CHECKED : 0), ID_ITEMS_2, "2");
+            NativeMethods.AppendMenu(itemsMenu, NativeMethods.MF_STRING | (_config.MaxOverlayItems == 3 ? NativeMethods.MF_CHECKED : 0), ID_ITEMS_3, "3");
+            NativeMethods.AppendMenu(itemsMenu, NativeMethods.MF_STRING | (_config.MaxOverlayItems == 4 ? NativeMethods.MF_CHECKED : 0), ID_ITEMS_4, "4");
+            NativeMethods.AppendMenu(itemsMenu, NativeMethods.MF_STRING | (_config.MaxOverlayItems == 5 ? NativeMethods.MF_CHECKED : 0), ID_ITEMS_5, "5");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_POPUP, (int)itemsMenu, "最大显示项目 | Max Items(&M)");
 
-            AppendMenu(menu, MF_SEPARATOR, 0, "");
-            AppendMenu(menu, MF_STRING, ID_EXIT, "退出 | Exit(&X)");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_SEPARATOR, 0, "");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING, ID_EXIT, "退出 | Exit(&X)");
 
-            GetCursorPos(out var point);
-            SetForegroundWindow(_hwnd);
-            TrackPopupMenu(menu, TPM_RIGHTBUTTON, point.X, point.Y, 0, _hwnd, IntPtr.Zero);
-            DestroyMenu(menu);
+            NativeMethods.GetCursorPos(out var point);
+            NativeMethods.SetForegroundWindow(_hwnd);
+            NativeMethods.TrackPopupMenu(menu, NativeMethods.TPM_RIGHTBUTTON, point.X, point.Y, 0, _hwnd, IntPtr.Zero);
+            NativeMethods.DestroyMenu(menu);
         }
 
         private void HandleCommand(int commandId)
@@ -179,36 +175,14 @@ namespace EasyAccess.UI
                 return;
             _disposed = true;
 
-            Shell_NotifyIcon(NIM_DELETE, ref _notifyIconData);
+            NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_DELETE, ref _notifyIconData);
 
             if (_hIcon != IntPtr.Zero)
-                DestroyIcon(_hIcon);
+                NativeMethods.DestroyIcon(_hIcon);
         }
 
-        #region Native
-
-        private delegate IntPtr Win32WindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-        private Win32WindowProc? _wndProc;
+        private NativeMethods.WndProcDelegate? _wndProc;
         private IntPtr _oldWndProc;
-
-        private const int WM_TRAYICON = 0x0400 + 1;
-        private const int WM_RBUTTONUP = 0x0205;
-        private const int WM_COMMAND = 0x0111;
-        private const int NIF_ICON = 0x00000002;
-        private const int NIF_TIP = 0x00000004;
-        private const int NIF_MESSAGE = 0x00000001;
-        private const int NIM_ADD = 0x00000000;
-        private const int NIM_DELETE = 0x00000002;
-        private const int MF_STRING = 0x00000000;
-        private const int MF_CHECKED = 0x00000008;
-        private const int MF_DISABLED = 0x00000002;
-        private const int MF_SEPARATOR = 0x00000800;
-        private const int MF_POPUP = 0x00000010;
-        private const int TPM_RIGHTBUTTON = 0x0002;
-        private const int IDI_APPLICATION = 32512;
-        private const uint IMAGE_ICON = 1;
-        private const uint LR_LOADFROMFILE = 0x00000010;
 
         private const int ID_TOGGLE_OVERLAY = 1001;
         private const int ID_LOG_DEBUG = 1010;
@@ -221,57 +195,5 @@ namespace EasyAccess.UI
         private const int ID_ITEMS_4 = 1023;
         private const int ID_ITEMS_5 = 1024;
         private const int ID_EXIT = 1099;
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        private struct NotifyIconData
-        {
-            public int cbSize;
-            public IntPtr hWnd;
-            public int uID;
-            public int uFlags;
-            public int uCallbackMessage;
-            public IntPtr hIcon;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-            public string szTip;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct POINT
-        {
-            public int X;
-            public int Y;
-        }
-
-        [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
-        private static extern bool Shell_NotifyIcon(int dwMessage, ref NotifyIconData pnid);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr LoadIcon(IntPtr hInstance, int lpIconName);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern IntPtr LoadImage(IntPtr hInst, string name, uint type, int cx, int cy, uint fuLoad);
-
-        [DllImport("user32.dll")]
-        private static extern bool DestroyIcon(IntPtr hIcon);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr CreatePopupMenu();
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern bool AppendMenu(IntPtr hMenu, int uFlags, int uIDNewItem, string lpNewItem);
-
-        [DllImport("user32.dll")]
-        private static extern bool TrackPopupMenu(IntPtr hMenu, int uFlags, int x, int y, int nReserved, IntPtr hWnd, IntPtr prcRect);
-
-        [DllImport("user32.dll")]
-        private static extern bool DestroyMenu(IntPtr hMenu);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetCursorPos(out POINT lpPoint);
-
-        [DllImport("user32.dll")]
-        private static extern bool SetForegroundWindow(IntPtr hWnd);
-
-        #endregion
     }
 }

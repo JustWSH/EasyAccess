@@ -1,7 +1,7 @@
-using global::System;
+using System;
 using EasyAccess.Util;
 
-namespace EasyAccess.System
+namespace EasyAccess.Interop
 {
     internal sealed class WinEventHook : IDisposable
     {
@@ -76,14 +76,12 @@ namespace EasyAccess.System
             switch (eventType)
             {
                 case NativeMethods.EVENT_OBJECT_CREATE:
-                    _logger?.Debug($"EVENT_OBJECT_CREATE: hwnd={hwnd}");
                     DialogCreated?.Invoke(hwnd);
                     break;
                 case NativeMethods.EVENT_OBJECT_DESTROY:
                     DialogDestroyed?.Invoke(hwnd);
                     break;
                 case NativeMethods.EVENT_SYSTEM_FOREGROUND:
-                    _logger?.Debug($"EVENT_SYSTEM_FOREGROUND: hwnd={hwnd}");
                     ForegroundChanged?.Invoke(hwnd);
                     break;
                 case NativeMethods.EVENT_OBJECT_LOCATIONCHANGE:

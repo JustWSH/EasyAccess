@@ -1,10 +1,10 @@
-using global::System;
-using global::System.Collections.Generic;
-using global::System.IO;
-using global::System.Runtime.InteropServices;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.InteropServices;
 using EasyAccess.Infra;
 
-namespace EasyAccess.System
+namespace EasyAccess.Interop
 {
     internal sealed class ExplorerFolder
     {
@@ -12,7 +12,6 @@ namespace EasyAccess.System
         public string DisplayName { get; set; } = string.Empty;
         public string WindowTitle { get; set; } = string.Empty;
         public IntPtr Hwnd { get; set; }
-        public bool IsTab { get; set; }
     }
 
     internal sealed class ShellWindowsInterop
@@ -41,14 +40,12 @@ namespace EasyAccess.System
                 dynamic shell = Activator.CreateInstance(shellWindowsType)!;
                 dynamic windows = shell.Windows;
 
-                var isWin11 = Environment.OSVersion.Version >= Win11Version;
-                _logger.Debug($"Windows version: {Environment.OSVersion.Version}, IsWin11: {isWin11}");
-
                 for (int i = 0; i < windows.Count; i++)
                 {
+                    dynamic? window = null;
                     try
                     {
-                        dynamic window = windows.Item(i);
+                        window = windows.Item(i);
                         if (window == null)
                             continue;
 
@@ -79,6 +76,11 @@ namespace EasyAccess.System
                     catch (Exception ex)
                     {
                         _logger.Debug($"Failed to get folder from window: {ex.Message}");
+                    }
+                    finally
+                    {
+                        if (window != null)
+                            Marshal.ReleaseComObject(window);
                     }
                 }
 

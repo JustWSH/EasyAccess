@@ -1,10 +1,11 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using global::System;
-using global::System.Threading.Tasks;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using EasyAccess.Core;
 using EasyAccess.Infra;
-using EasyAccess.System;
+using EasyAccess.Interop;
 using EasyAccess.UI;
 using EasyAccess.Util;
 using Windows.UI.Notifications;
@@ -28,6 +29,7 @@ namespace EasyAccess
         private bool _initialized;
         private bool _isNavigating;
         private bool _justNavigated;
+        private CancellationTokenSource? _justNavigatedCts;
 
         public App()
         {
@@ -39,13 +41,12 @@ namespace EasyAccess
             _singleInstance = new SingleInstance();
             if (!_singleInstance.IsFirstInstance)
             {
-                _singleInstance.TryActivateExisting();
                 Current.Exit();
                 return;
             }
 
             var configDir = ConfigManager.GetDefaultConfigDirectory();
-            var logDir = global::System.IO.Path.Combine(configDir, "logs");
+            var logDir = System.IO.Path.Combine(configDir, "logs");
 
             _logger = new Logger(logDir, LogLevel.Debug);
             _logger.Info($"Log directory: {logDir}");
@@ -157,13 +158,11 @@ namespace EasyAccess
 
         private void OnDialogDestroyed(IntPtr hwnd)
         {
-            _logger.Debug($"OnDialogDestroyed called: hwnd={hwnd}, currentDialogHwnd={_currentDialogHwnd}");
             if (hwnd == _currentDialogHwnd)
             {
-                _logger.Info($"Dialog destroyed: {hwnd}");
+                _logger.Info($"Dialog destroyed: {hwnd}, hiding overlay");
                 _currentDialogHwnd = IntPtr.Zero;
                 _overlay?.HideOverlay();
-                _logger.Info("Overlay hidden");
             }
         }
 
@@ -172,13 +171,8 @@ namespace EasyAccess
             if (!_initialized)
                 return;
 
-            _logger?.Debug($"OnForegroundChanged: hwnd={hwnd}, currentDialogHwnd={_currentDialogHwnd}");
-
             if (_isNavigating)
-            {
-                _logger?.Debug("Skipping foreground change during navigation");
                 return;
-            }
 
             if (_dialogDetector!.IsFileDialog(hwnd))
             {
@@ -256,13 +250,28 @@ namespace EasyAccess
             {
                 _isNavigating = false;
                 _justNavigated = true;
-                _ = Task.Delay(1000).ContinueWith(_ => _justNavigated = false);
+                _justNavigatedCts?.Cancel();
+                _justNavigatedCts = new CancellationTokenSource();
+                _ = ResetJustNavigatedAfterDelay(_justNavigatedCts.Token);
+            }
+        }
+
+        private async Task ResetJustNavigatedAfterDelay(CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(1000, token);
+                _justNavigated = false;
+            }
+            catch (OperationCanceledException)
+            {
             }
         }
 
         private void OnExitRequested()
         {
             _logger.Info("Exit requested");
+            _justNavigatedCts?.Cancel();
             _winEventHook?.Dispose();
             _overlay?.Close();
             _trayIcon?.Dispose();

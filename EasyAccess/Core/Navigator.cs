@@ -1,7 +1,7 @@
-using global::System;
-using global::System.Runtime.InteropServices;
-using global::System.Text;
-using global::System.Threading.Tasks;
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
 using EasyAccess.Infra;
 using EasyAccess.Util;
 
@@ -112,22 +112,19 @@ namespace EasyAccess.Core
 
         private bool SetAddressText(IntPtr editHwnd, string path)
         {
-            _logger.Debug($"SetAddressText: hwnd={editHwnd}, path={path}");
+            _logger.Debug($"SetAddressText: path={path}");
 
             var className = GetClassName(editHwnd);
-            _logger.Debug($"Control class: {className}");
 
             if (className == "ToolbarWindow32")
             {
-                _logger.Debug("Found breadcrumb, clicking to switch to edit mode...");
                 NativeMethods.SendMessage(editHwnd, NativeMethods.WM_LBUTTONDOWN, IntPtr.Zero, IntPtr.Zero);
                 NativeMethods.SendMessage(editHwnd, NativeMethods.WM_LBUTTONUP, IntPtr.Zero, IntPtr.Zero);
-                global::System.Threading.Thread.Sleep(300);
+                System.Threading.Thread.Sleep(300);
 
                 var editControl = FindEditInAddressBar(editHwnd);
                 if (editControl != IntPtr.Zero)
                 {
-                    _logger.Debug($"Found edit control after click: {editControl}");
                     editHwnd = editControl;
                 }
                 else
@@ -138,13 +135,12 @@ namespace EasyAccess.Core
             }
 
             NativeMethods.SetForegroundWindow(editHwnd);
-            global::System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(100);
 
             NativeMethods.SendMessage(editHwnd, NativeMethods.WM_SETTEXT, IntPtr.Zero, path);
-            global::System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(100);
 
             SendEnterKey(editHwnd);
-            _logger.Debug("Enter key sent");
 
             return true;
         }

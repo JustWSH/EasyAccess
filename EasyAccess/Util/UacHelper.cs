@@ -1,5 +1,5 @@
-using global::System;
-using global::System.Runtime.InteropServices;
+using System;
+using System.Runtime.InteropServices;
 
 namespace EasyAccess.Util
 {
@@ -42,7 +42,7 @@ namespace EasyAccess.Util
 
         public static bool IsCurrentProcessElevated()
         {
-            using var process = global::System.Diagnostics.Process.GetCurrentProcess();
+            using var process = System.Diagnostics.Process.GetCurrentProcess();
             return IsProcessElevated((uint)process.Id);
         }
 

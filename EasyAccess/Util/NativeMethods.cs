@@ -17,10 +17,8 @@ namespace EasyAccess.Util
 
         public const int WS_EX_TOOLWINDOW = 0x00000080;
         public const int WS_EX_NOACTIVATE = 0x08000000;
-        public const int WS_EX_TOPMOST = 0x00000008;
         public const int WS_EX_LAYERED = 0x00080000;
 
-        public const int LWA_ALPHA = 0x00000002;
         public const int LWA_COLORKEY = 0x00000001;
 
         public const uint EVENT_OBJECT_CREATE = 0x8000;
@@ -35,7 +33,6 @@ namespace EasyAccess.Util
         public const int WM_GETTEXT = 0x000D;
         public const int WM_GETTEXTLENGTH = 0x000E;
         public const int BM_CLICK = 0x00F5;
-        public const int WM_CLOSE = 0x0010;
         public const int WM_USER = 0x0400;
         public const int WM_LBUTTONDOWN = 0x0201;
         public const int WM_LBUTTONUP = 0x0202;
@@ -48,8 +45,6 @@ namespace EasyAccess.Util
 
         public const int SW_HIDE = 0;
         public const int SW_SHOW = 5;
-
-        public const int SMTO_ABORTIFHUNG = 0x0002;
 
         public const uint PROCESS_QUERY_INFORMATION = 0x0400;
         public const uint TOKEN_QUERY = 0x0008;
@@ -77,7 +72,7 @@ namespace EasyAccess.Util
         public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern int GetClassNameW(IntPtr hWnd, global::System.Text.StringBuilder lpClassName, int nMaxCount);
+        public static extern int GetClassNameW(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool EnumChildWindows(IntPtr hWnd, EnumWindowsProc lpEnumFunc, IntPtr lParam);
@@ -89,19 +84,7 @@ namespace EasyAccess.Util
         public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, global::System.Text.StringBuilder lParam);
-
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
-
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern int GetWindowText(IntPtr hWnd, global::System.Text.StringBuilder lpString, int nMaxCount);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern int GetWindowTextLength(IntPtr hWnd);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool IsHungAppWindow(IntPtr hWnd);
+        public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, System.Text.StringBuilder lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -123,9 +106,6 @@ namespace EasyAccess.Util
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool IsWindowVisible(IntPtr hWnd);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
@@ -178,16 +158,6 @@ namespace EasyAccess.Util
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, string lParam);
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool SendMessageTimeout(
-            IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam,
-            uint fuFlags, uint uTimeout, out IntPtr lpdwResult);
-
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern bool SendMessageTimeout(
-            IntPtr hWnd, int Msg, IntPtr wParam, string lParam,
-            uint fuFlags, uint uTimeout, out IntPtr lpdwResult);
-
         #endregion
 
         #region Kernel32.dll
@@ -200,9 +170,6 @@ namespace EasyAccess.Util
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool TerminateProcess(IntPtr hProcess, uint uExitCode);
 
         #endregion
 
@@ -218,13 +185,6 @@ namespace EasyAccess.Util
 
             public int Width => Right - Left;
             public int Height => Bottom - Top;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
-        {
-            public int X;
-            public int Y;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -271,9 +231,96 @@ namespace EasyAccess.Util
         public const uint INPUT_KEYBOARD = 1;
         public const uint KEYEVENTF_KEYUP = 0x0002;
         public const ushort VK_RETURN = 0x0D;
-        public const ushort VK_CONTROL = 0x11;
-        public const ushort VK_V = 0x56;
 
         #endregion
+
+        #region TrayIcon Constants
+
+        public const int WM_TRAYICON = 0x0401;
+        public const int WM_RBUTTONUP = 0x0205;
+        public const int WM_COMMAND = 0x0111;
+        public const int NIF_ICON = 0x00000002;
+        public const int NIF_TIP = 0x00000004;
+        public const int NIF_MESSAGE = 0x00000001;
+        public const int NIM_ADD = 0x00000000;
+        public const int NIM_DELETE = 0x00000002;
+        public const int MF_STRING = 0x00000000;
+        public const int MF_CHECKED = 0x00000008;
+        public const int MF_DISABLED = 0x00000002;
+        public const int MF_SEPARATOR = 0x00000800;
+        public const int MF_POPUP = 0x00000010;
+        public const int TPM_RIGHTBUTTON = 0x0002;
+        public const int IDI_APPLICATION = 32512;
+        public const uint IMAGE_ICON = 1;
+        public const uint LR_LOADFROMFILE = 0x00000010;
+
+        #endregion
+
+        #region TrayIcon Structures
+
+        public delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct NOTIFYICONDATA
+        {
+            public int cbSize;
+            public IntPtr hWnd;
+            public int uID;
+            public int uFlags;
+            public int uCallbackMessage;
+            public IntPtr hIcon;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string szTip;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
+        #endregion
+
+        #region Shell32.dll
+
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+        public static extern bool Shell_NotifyIcon(int dwMessage, ref NOTIFYICONDATA pnid);
+
+        #endregion
+
+        #region User32.dll (TrayIcon)
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr LoadIcon(IntPtr hInstance, int lpIconName);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern IntPtr LoadImage(IntPtr hInst, string name, uint type, int cx, int cy, uint fuLoad);
+
+        [DllImport("user32.dll")]
+        public static extern bool DestroyIcon(IntPtr hIcon);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr CreatePopupMenu();
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern bool AppendMenu(IntPtr hMenu, int uFlags, int uIDNewItem, string lpNewItem);
+
+        [DllImport("user32.dll")]
+        public static extern bool TrackPopupMenu(IntPtr hMenu, int uFlags, int x, int y, int nReserved, IntPtr hWnd, IntPtr prcRect);
+
+        [DllImport("user32.dll")]
+        public static extern bool DestroyMenu(IntPtr hMenu);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetCursorPos(out POINT lpPoint);
+
+        #endregion
+
+        public static Microsoft.UI.Windowing.AppWindow GetAppWindow(IntPtr hwnd)
+        {
+            return Microsoft.UI.Windowing.AppWindow.GetFromWindowId(
+                Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd));
+        }
     }
 }

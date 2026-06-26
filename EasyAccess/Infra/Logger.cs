@@ -1,6 +1,6 @@
-using global::System;
-using global::System.IO;
-using global::System.Text;
+using System;
+using System.IO;
+using System.Text;
 
 namespace EasyAccess.Infra
 {
@@ -49,7 +49,6 @@ namespace EasyAccess.Infra
                 {
                     RotateIfNeeded();
                     _writer?.WriteLine(line);
-                    _writer?.Flush();
                 }
                 catch
                 {
@@ -86,7 +85,7 @@ namespace EasyAccess.Infra
             _currentLogFile = logFile;
             _writer = new StreamWriter(logFile, append: true, encoding: Encoding.UTF8)
             {
-                AutoFlush = false
+                AutoFlush = true
             };
         }
 

@@ -1,8 +1,8 @@
-using global::System;
-using global::System.Collections.Generic;
-using global::System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using EasyAccess.Infra;
-using EasyAccess.System;
+using EasyAccess.Interop;
 
 namespace EasyAccess.Core
 {
@@ -28,7 +28,6 @@ namespace EasyAccess.Core
                 {
                     if (_cachedFolders != null && DateTime.Now - _cacheTime < CacheDuration)
                     {
-                        _logger.Debug($"Using cached folders ({_cachedFolders.Count} items)");
                         return new List<ExplorerFolder>(_cachedFolders);
                     }
 
