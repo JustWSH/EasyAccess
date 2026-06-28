@@ -289,14 +289,7 @@ namespace EasyAccess.UI
 
         private static string TruncatePath(string path)
         {
-            if (path.Length <= 50)
-                return path;
-
-            var parts = path.Split('\\');
-            if (parts.Length <= 3)
-                return path;
-
-            return $"{parts[0]}\\...\\{parts[parts.Length - 1]}";
+            return path;
         }
 
         private AppWindow GetAppWindow()
