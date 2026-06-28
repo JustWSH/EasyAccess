@@ -207,6 +207,9 @@ namespace EasyAccess
                 if (!_configManager!.Config.ShowOverlayOnDetect)
                     return;
 
+                if (!_folderCollector!.HasCachedFolders)
+                    return;
+
                 _logger?.Debug($"Dialog location changed: {hwnd}, updating overlay position");
                 _overlay?.ShowOverlay(hwnd);
             }
@@ -220,7 +223,7 @@ namespace EasyAccess
                 return;
             }
 
-            if (_folderCollector!.HasCache)
+            if (_folderCollector!.HasCachedFolders)
             {
                 _overlay?.ShowOverlay(dialogHwnd);
                 return;

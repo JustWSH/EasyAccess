@@ -92,7 +92,7 @@ namespace EasyAccess.UI
         {
             var menu = NativeMethods.CreatePopupMenu();
 
-            NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING | NativeMethods.MF_DISABLED, 0, "EasyAccess v1.0");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING | NativeMethods.MF_DISABLED, 0, "EasyAccess v1.1");
             NativeMethods.AppendMenu(menu, NativeMethods.MF_SEPARATOR, 0, "");
 
             NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING | (_config.ShowOverlayOnDetect ? NativeMethods.MF_CHECKED : 0),
@@ -120,6 +120,7 @@ namespace EasyAccess.UI
             NativeMethods.AppendMenu(menu, NativeMethods.MF_POPUP, (int)langMenu, T("语言", "Language") + "(&G)");
 
             NativeMethods.AppendMenu(menu, NativeMethods.MF_SEPARATOR, 0, "");
+            NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING, ID_OPEN_STARTUP, T("打开启动文件夹", "Open Startup Folder") + "(&S)");
             NativeMethods.AppendMenu(menu, NativeMethods.MF_STRING, ID_EXIT, T("退出", "Exit") + "(&X)");
 
             NativeMethods.GetCursorPos(out var point);
@@ -180,10 +181,23 @@ namespace EasyAccess.UI
                     _config.Language = "en";
                     _saveConfig();
                     break;
+                case ID_OPEN_STARTUP:
+                    OpenStartupFolder();
+                    break;
                 case ID_EXIT:
                     ExitRequested?.Invoke();
                     break;
             }
+        }
+
+        private void OpenStartupFolder()
+        {
+            try
+            {
+                var startupPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+                System.Diagnostics.Process.Start("explorer.exe", startupPath);
+            }
+            catch { }
         }
 
         public void Dispose()
@@ -213,6 +227,7 @@ namespace EasyAccess.UI
         private const int ID_ITEMS_5 = 1024;
         private const int ID_LANG_ZH = 1030;
         private const int ID_LANG_EN = 1031;
+        private const int ID_OPEN_STARTUP = 1040;
         private const int ID_EXIT = 1099;
     }
 }

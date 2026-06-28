@@ -19,6 +19,7 @@ namespace EasyAccess.Core
         }
 
         public bool HasCache => _cachedFolders != null;
+        public bool HasCachedFolders => _cachedFolders != null && _cachedFolders.Count > 0;
 
         public Task<List<ExplorerFolder>> GetOpenFoldersAsync()
         {
